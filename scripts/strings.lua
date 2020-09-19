@@ -54,9 +54,9 @@ return {
 
 		ITEMS_IN_STORE = "ITEMS IN STORES",
 		ITEMS_IN_STORE_TIP = "<c:FF8411>ITEMS IN STORES</c>\nAllows the new exclusive items to spawn in nanofabs and such, making them not exclusive anymore.",
-
+		
 		SIDEMISSIONS = "SIDE MISSIONS",
-		SIDEMISSIONS_TIP = "Enable new side missions",		
+		SIDEMISSIONS_TIP = "Enable new side missions",
 	},
 
 	PROPS =
@@ -84,7 +84,7 @@ return {
 				},
 				FINAL_WORDS =
 				{
-					"...",--need to come up with sth here
+					"...",
 				},
 			},
 		},
@@ -116,11 +116,10 @@ return {
 		ITEM_TAZER_OLD = "Worn Neural Disrupter",
 		-- ITEM_TAZER_OLD_TIP = "",
 		ITEM_TAZER_OLD_FLAVOR = "This disrupter is worn out, but still finds use as a \"persuasion\" tool.",
-
+		
 		DISCARDED_MANACLES = "Discarded Manacles",
-		DISCARDED_MANACLES_TOOLTIP = "Secured in place. Alerts the captain when seen.",
-		DISCARDED_MANACLES_FLAVOR = "An empty space, where a prisoner is supposed to be restrained.",
-
+		DISCARDED_MANACLES_TOOLTIP = "Secured in place. Alerts the Captain when seen.",
+		DISCARDED_MANACLES_FLAVOR = "An empty space, where a prisoner is supposed to be restrained.",		
 	},
 
 	-- ACTIONS =
@@ -164,15 +163,10 @@ return {
 
 	MISSIONS = {
 		ASSASSINATION = {
-			OBJ_FIND = "Locate the target",
-			OBJ_KILL = "Eliminate the target",
-			OBJ_UNLOCK = "Unlock the secure door",
-			SECUREDOOR_TIP = "UNLOCK USING AUTHORIZED BODY",
+		    OBJ_FIND = "Locate the target",
+		    OBJ_KILL = "Disable the target",
+		    OBJ_DRAG = "Extract the target",
 		},
-		MOLE = {
-		    OBJ_KILL_WITNESS = "Kill any eyewitnesses",
-			WITNESS_DETECTED = "WITNESS DETECTED"
-		}
 	},
 
 	LOCATIONS = {
@@ -256,7 +250,8 @@ return {
 			EA_HOSTAGE_FRAIL_DESC = "KO damage is lethal.",
 			EA_HOSTAGE_VITAL_STATUS = "VITAL STATUS",
 			EA_HOSTAGE_VITAL_STATUS_DESC = "Will expire if not extracted in {1} {1:turn|turns}.",
-		},	
+		},
+		
 		
 	},
 
@@ -335,29 +330,8 @@ return {
 						"moremissions/VoiceOver/Central/assassination/seen1",
 						"Central"}},
 				},
-				DOOR_SIGHTED = {
-					{
-						{"Interesting. Our target has prepared a secure room. Both the target and his bodyguard should have the codes to this door.",
-							nil,
-							"Central"},
-						{"We don't have time to extract the codes, so you'll need to drag one of them up to the door. Their bodies should also deactivate the lasers as you pass.",
-							nil,
-							"Central"},
-					},
-				},
-				DOOR_UNLOCKED = {
-					{{"Good work, now let's see what he has in here.",
-						nil,
-						"Central"}},
-				},
-				KO = {
-					{{"We don't earn partial credit here, operator. Find a way to finish the job.",
-						nil,
-						"Central"}},
-				},
 				AFTERMATH = {
-					-- "Now make sure not to bump into any rival assassins on your way out."
-					{{"So far, so good. Get our agents out of there and we can collect from the client.",
+					{{"So far, so good. Now make sure not to bump into any rival assassins on your way out.",
 						"moremissions/VoiceOver/Central/assassination/aftermath0",
 						"Central"}},
 				},
