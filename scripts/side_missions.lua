@@ -22,7 +22,6 @@ local SIDEMISSIONS = {"fancyfab"} --random guard should have access key
 -- terminal where Shopcat contacts you for a mice delivery job: as reward, upgrade a program of your choice? --hide it in the vents
 -- special augment station that increases agent's max augment limit at the cost of KO for the rest of the  mission
 
--- THIS IS ALL VERY WIP
 
 local BOUGHT_ITEM =
 {       

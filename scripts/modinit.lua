@@ -66,6 +66,8 @@ local function init( modApi )
 
 	modApi:addGenerationOption("MM_easy_mode",  STRINGS.MOREMISSIONS.OPTIONS.EASY_MODE , STRINGS.MOREMISSIONS.OPTIONS.EASY_MODE_TIP, {enabled = false, noUpdate=true, difficulties = {{simdefs.NORMAL_DIFFICULTY, true}} } )
 
+	modApi:addGenerationOption("MM_sidemissions",  STRINGS.MOREMISSIONS.OPTIONS.SIDEMISSIONS , STRINGS.MOREMISSIONS.OPTIONS.SIDEMISSIONS_TIP, {noUpdate=true} )
+			
 	-- abilities, for now simple override (I'm not smart enough to...)
 	modApi:addAbilityDef( "hostage_rescuable", scriptPath .."/abilities/hostage_rescuable_2" ) -- to dest... okay maybe don't needed, we'll see
 
@@ -101,19 +103,18 @@ local function init( modApi )
 				end
 			end
 		end
-		oldInit( self, params, levelData, ... )
-	end
 
-	--cannot set display string... local variable only -M
-	table.insert(modApi.mod_manager.credit_sources, "assassinationreward")
-
+		oldInit( self, params, levelData, ... )	
+	end	
+	
 	-- SIDE MISSIONS
 	local showItemStore = abilitydefs.lookupAbility( "showItemStore")
 	local showItemStore_executeOld = showItemStore.executeAbility
-
+	
 	showItemStore.executeAbility = function( self, sim, unit, userUnit, ... )
 	-- note: unit is nanofab, userUnit is agent
 		if unit:getTraits().storeType and (unit:getTraits().storeType == "large") and unit:getTraits().luxuryNanofab and sim.luxuryNanofabItemType then
+			
 
 			local strings_screens = include( "strings_screens" )
 			sim.old_augmenttip, sim.old_weapontip, sim.old_itemtip = strings_screens.STR_346165218, strings_screens.STR_2618909495, strings_screens.STR_590530336
@@ -126,6 +127,7 @@ local function init( modApi )
 			elseif itemType == 3 then
 				new_tooltip = [[WEAPONS]]
 			end
+
 
 			strings_screens.STR_346165218 = new_tooltip
 			strings_screens.STR_2618909495 = new_tooltip
@@ -157,6 +159,17 @@ local function init( modApi )
 	end
 
 	-- END OF MOLE INSERTION
+
+			
+			strings_screens.STR_346165218 = new_tooltip
+			strings_screens.STR_2618909495 = new_tooltip
+			strings_screens.STR_590530336 = new_tooltip		
+		
+		end
+		
+		showItemStore_executeOld(self, sim, unit, userUnit, ...)
+	end		
+  
 
 	include( scriptPath .. "/simquery" )
 	include( scriptPath .. "/engine" )
@@ -579,6 +592,7 @@ local function load( modApi, options, params )
 	local commondefs = include( scriptPath .. "/commondefs" )
 	modApi:addTooltipDef( commondefs )
 
+
 	local side_missions = include( scriptPath .. "/side_missions" )
 	if options["MM_sidemissions"].enabled then
 		modApi:addEscapeScripts(side_missions.escape_scripts)
@@ -591,6 +605,15 @@ local function load( modApi, options, params )
 	modApi:addAbilityDef( "MM_W93_incogRoom_unlock", scriptPath .."/abilities/MM_W93_incogRoom_unlock" )
 	modApi:addAbilityDef( "MM_W93_incogRoom_upgrade", scriptPath .."/abilities/MM_W93_incogRoom_upgrade" )
 	modApi:addAbilityDef( "MM_fakesteal", scriptPath .. "/abilities/MM_fakesteal" )
+
+	
+	local side_missions = include( scriptPath .. "/side_missions" )
+	if options["MM_sidemissions"].enabled then
+		modApi:addEscapeScripts(side_missions.escape_scripts)
+		modApi:addSideMissions(scriptPath, side_missions.SIDEMISSIONS )	
+	end	
+	
+
 
 	include( scriptPath .. "/missions/distress_call" )
 	include( scriptPath .. "/missions/weapons_expo" )
