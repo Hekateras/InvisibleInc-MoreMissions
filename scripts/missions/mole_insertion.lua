@@ -870,7 +870,6 @@ end
 
 local function moleFitness( cxt, prefab, x, y )
 	local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
-	simlog("[QEDBG] ExitCandidate [%s,%s] %s", x, y, maxDist)
 	-- If no candidate is at least 18 tiles away, pick the furthest.
 	-- Otherwise pick among those at least 18 tiles away
 	-- (using the fractional part of the distance to make it less predictable).
