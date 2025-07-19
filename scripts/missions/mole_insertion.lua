@@ -869,13 +869,12 @@ function mission:init( scriptMgr, sim )
 end
 
 local function moleFitness( cxt, prefab, x, y )
-	local tileCount = cxt:calculatePrefabLinkage( prefab, x, y )
-	if tileCount == 0 then
-		return 0 -- Doesn't link up
-	end
-
-	local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "moleinsertion" )
-	return tileCount + maxDist^2
+	local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
+	simlog("[QEDBG] ExitCandidate [%s,%s] %s", x, y, maxDist)
+	-- If no candidate is at least 18 tiles away, pick the furthest.
+	-- Otherwise pick among those at least 18 tiles away
+	-- (using the fractional part of the distance to make it less predictable).
+	return math.min(maxDist, 18 + math.mod(maxDist, 1.0))
 end
 
 function mission.pregeneratePrefabs( cxt, tagSet )
