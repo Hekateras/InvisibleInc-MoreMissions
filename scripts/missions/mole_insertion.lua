@@ -555,6 +555,12 @@ local function abandonedMole( sim )
 	return false
 end
 
+-- Notice the guard exit before finishing the hack => We'll point it out immediately when needed.
+local function seeGuardExitEarly( script, sim )
+	local _, cell = script:waitFor( PC_SAW_GUARD_EXIT )
+	sim:getTags().MM_seenInformantExit = { x=cell.x, y=cell.y }
+end
+-- Notice the guard exit after finishing the hack => Point it out now.
 local function seeGuardExit( script, sim )
 	local _, cell = script:waitFor( PC_SAW_GUARD_EXIT )
 	script:queue( { type="pan", x=cell.x, y=cell.y, zoom=0.27 } )
@@ -654,6 +660,7 @@ end
 
 local function moleMission( script, sim )
 	script:addHook( seeObjectiveDoor )
+	script:addHook( seeGuardExitEarly )
 	
 	local _, hackConsole = script:waitFor( mission_util.SAW_SPECIAL_TAG(script, "personneldb", STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.PERSONNEL_DB, STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.HACK_WITH_MOLE ) )
 	local x0, y0 = hackConsole:getLocation()
@@ -680,11 +687,21 @@ local function moleMission( script, sim )
 	
 	sim:triggerEvent( "TRG_OBJ_COMPLETE", { missionType = "mole_insertion" })
 	sim:addObjective( STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.ESCAPE, "mole_escape" ) -- mole escapes through guard elevator
-	scripts = SCRIPTS.INGAME.MOLE_INSERTION.FINISHED_DB_HACK
-	script:queue( 1*cdefs.SECONDS )
-	queueCentral( script, scripts )
 	script:addHook( investigateMole )
-	script:addHook( seeGuardExit )
+	script:removeHook( seeGuardExitEarly )
+	if sim:getTags().MM_seenInformantExit then
+		script:queue( 1*cdefs.SECONDS )
+		queueCentral( script, SCRIPTS.INGAME.MOLE_INSERTION.FINISHED_DB_HACK )
+		local exitCell = sim:getTags().MM_seenInformantExit
+		script:queue( { type="pan", x=exitCell.x, y=exitCell.y, zoom=0.27 } )
+		script:queue( 1 * cdefs.SECONDS )
+		queueCentral( script, SCRIPTS.INGAME.MOLE_INSERTION.TO_GUARD_EXIT )
+	else
+		script:addHook( seeGuardExit )
+		script:queue( 1*cdefs.SECONDS )
+		queueCentral( script, SCRIPTS.INGAME.MOLE_INSERTION.FINISHED_DB_HACK )
+		queueCentral( script, SCRIPTS.INGAME.MOLE_INSERTION.TO_GUARD_EXIT )
+	end
 	script:waitFor( MOLE_ESCAPED_GUARD_ELEVATOR )
 	sim:getTags().MM_informant_success = true --successfully planted mole
 	sim:removeObjective("mole_escape")

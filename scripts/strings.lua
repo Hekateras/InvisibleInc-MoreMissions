@@ -1416,6 +1416,8 @@ return {
 					{{"The hack is done, but the informant got tagged as they were plugging out. Their location will keep pinging nearby security each alarm level.",
 						"moremissions/VoiceOver/Central/informant/hacked_1p",
 						"Central"}},
+				},
+				TO_GUARD_EXIT = {
 					{{"Get them to a guard elevator and off this floor, and stay out of sight. Our work is almost done.",
 						"moremissions/VoiceOver/Central/informant/hacked_2p",
 						"Central"}},
