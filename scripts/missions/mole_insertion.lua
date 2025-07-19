@@ -636,6 +636,16 @@ local function witnessDeviceRebooted( script, sim )
 	end
 end
 
+-- Give the player an indication that this is an objective room when they see the door.
+local function seeObjectiveDoor( script, sim )
+	local a, cell = script:waitFor( mission_util.PC_SAW_CELL_WITH_TAG(script, "personneldb_door" ) )
+	script:queue( { type="pan", x=cell.x, y=cell.y, zoom=0.27 } )
+	-- log:write("[MM] PC saw door")
+	script:queue( 1*cdefs.SECONDS )
+	local scripts = SCRIPTS.INGAME.MOLE_INSERTION.SEE_OBJECTIVE_DOOR
+	mission_util.reportScriptMsg( script, scripts)
+end
+
 local function investigateMole( script, sim )
 	while true do
 
@@ -655,19 +665,14 @@ local function investigateMole( script, sim )
 end
 
 local function moleMission( script, sim )
-
-	local a, cell = script:waitFor( mission_util.PC_SAW_CELL_WITH_TAG(script, "personneldb_door" ) )
-	script:queue( { type="pan", x=cell.x, y=cell.y, zoom=0.27 } )
-	-- log:write("[MM] PC saw door")
-	script:queue( 1*cdefs.SECONDS )
-	local scripts = SCRIPTS.INGAME.MOLE_INSERTION.SEE_OBJECTIVE_DOOR
-	mission_util.reportScriptMsg( script, scripts)
+	script:addHook( seeObjectiveDoor )
 	
 	local _, hackConsole = script:waitFor( mission_util.SAW_SPECIAL_TAG(script, "personneldb", STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.PERSONNEL_DB, STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.HACK_WITH_MOLE ) )
 	local x0, y0 = hackConsole:getLocation()
+	script:removeHook( seeObjectiveDoor )
 	script:queue( { type="pan", x=x0, y=y0, zoom=0.27 } )
 	script:queue( 1*cdefs.SECONDS )
-	scripts = SCRIPTS.INGAME.MOLE_INSERTION.SEE_OBJECTIVE_DB
+	local scripts = SCRIPTS.INGAME.MOLE_INSERTION.SEE_OBJECTIVE_DB
 	mission_util.reportScriptMsg( script, scripts )
 	sim:removeObjective( "findDB" )
 	-- log:write("[MM] pc saw db")
