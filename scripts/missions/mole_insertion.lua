@@ -555,20 +555,6 @@ local function abandonedMole( sim )
 	return false
 end
 
-local function moleDied( script, sim )
-	script:waitFor( MOLE_DEAD )
-	sim:removeObjective("hack_personnel_DB")
-	sim:removeObjective("findDB")
-	sim:removeObjective("mole_escape")	
-	sim:removeObjective("kill_witness")
-	sim:getTags().MM_mole_died = true
-	sim.exit_warning = nil
-	sim:getNPC():removeAbility(sim, "MM_informant_witness")
-	-- log:write("[MM] mole died")
-	local scripts = SCRIPTS.INGAME.MOLE_INSERTION.MOLE_DIED
-	mission_util.reportScriptMsg( script, scripts )
-end
-
 local function seeGuardExit( script, sim )
 	local _, cell = script:waitFor( PC_SAW_GUARD_EXIT )
 	script:queue( { type="pan", x=cell.x, y=cell.y, zoom=0.27 } )
@@ -614,7 +600,9 @@ local function sawCameraDbHook(mission)
 		end
 	end
 
-	return mission_util.DoReportObject(waiter, SCRIPTS.INGAME.MOLE_INSERTION.SEE_CAMERADB, nil, postSawCameraDb)
+	-- Store the fn, so it can be cleaned up if the mole dies.
+	mission.sawCameraDb = mission_util.DoReportObject(waiter, SCRIPTS.INGAME.MOLE_INSERTION.SEE_CAMERADB, nil, postSawCameraDb)
+	return mission.sawCameraDb
 end
 
 local function witnessDeviceRebooted( script, sim )
@@ -714,6 +702,27 @@ local function moleMission( script, sim )
 	queueCentral(script, scripts)
 	
 end
+
+local function moleDied( script, sim, mission )
+	script:waitFor( MOLE_DEAD )
+	sim:removeObjective("hack_personnel_DB")
+	sim:removeObjective("findDB")
+	sim:removeObjective("mole_escape")	
+	sim:removeObjective("kill_witness")
+	script:removeHook( moleMission )
+	script:removeHook( seeObjectiveDoor )
+	script:removeHook( seeGuardExit )
+	script:removeHook( mission.sawCameraDb )
+	script:removeHook( guardWitnessesAgent )
+	script:removeHook( cameraWitnessesAgent )
+	sim:getTags().MM_mole_died = true
+	sim.exit_warning = nil
+	sim:getNPC():removeAbility(sim, "MM_informant_witness")
+	-- log:write("[MM] mole died")
+	local scripts = SCRIPTS.INGAME.MOLE_INSERTION.MOLE_DIED
+	mission_util.reportScriptMsg( script, scripts )
+end
+
 
 local function findCell( sim, tag )
 	local cells = sim:getCells( tag )
@@ -816,7 +825,7 @@ function mission:init( scriptMgr, sim )
 	scriptMgr:addHook( "witnessDeviceRebooted", witnessDeviceRebooted )
 	scriptMgr:addHook( "witnessDied", witnessDied, nil, self)
 	scriptMgr:addHook( "moleMission", moleMission )
-	scriptMgr:addHook( "moleDied", moleDied )
+	scriptMgr:addHook( "moleDied", moleDied, nil, self )
 	scriptMgr:addHook( "spawnMole", spawnMole )
 	scriptMgr:addHook( "moleEscaped", moleEscaped )
 	scriptMgr:addHook( "sawCameraDB", sawCameraDbHook(self))
