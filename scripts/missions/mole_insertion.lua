@@ -878,39 +878,51 @@ end
 
 -- Fitness function for the mole's exit (the guard entry).
 -- SELECT_WEIGHTED randomizes an integer among the total candidate weights returned.
-local function moleExitFitness( cxt, prefab, x, y )
-	local adjX, adjY = x + 1, y + 1 -- adjust for the prefab anchor of the guard entry always being -1,-1 outside of it
-	local startRoom = cxt:roomContaining(adjX, adjY)
-	if not startRoom then
-		return 1
-	end
-
-	-- Distance between guard_entry candidate and the objective room. Units: 1 = 1 procgen room
-	local minDepth = nil
-	mazegen.breadthFirstSearch(
-		cxt, startRoom, function(r)
-			if r.tags["moleinsertion"] and minDepth == nil then
-				minDepth = r.depth
-			end
+local function getMoleExitFitnessFn( cxt )
+	local objectiveRoom = nil
+	for _, r in ipairs(cxt.rooms) do
+		if r.tags["moleinsertion"] then
+			objectiveRoom = r
+			break
 		end
-	)
-
-	-- Strongly prefer further based on room distance cubed up through 3 rooms away.
-	-- Past that, don't need to force distance as strongly, so just linear.
-	-- 1=1, 2=8, 3=27, 4=40, 5=50, ...
-	local result
-	if minDepth <= 3 then
-		result = minDepth^3
-	else
-		result = 10 * minDepth
+	end
+	-- Distance between candidates and the objective room, calculated once.
+	-- Units: 1 = 1 procgen room
+	-- Locked doors/lasers cost 3, instead of 1.
+	local distMap = {}
+	if objectiveRoom then
+		mazegen.breadthFirstSearch(
+			cxt, objectiveRoom,
+			function(r)
+				distMap[r.roomIndex] = r.depth
+			end
+		)
 	end
 
-	if log:isFlagged("LOG_MM") then
-		-- If LOG_MM=true is in LOG_FLAGS={...} in main.lua, then calculate and print debug estimates.
-		local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
-		log:write("LOG_MM", "entryGuard candidate (%s,%s) rd=%s res=%s td=%s", x, y, minDepth, result, maxDist)
+	local function moleExitFitness( cxt, prefab, x, y )
+		local adjX, adjY = x + 1, y + 1 -- adjust for the prefab anchor of the guard entry always being -1,-1 outside of it
+		local startRoom = cxt:roomContaining(adjX, adjY)
+		-- Distance for the current candidate
+		local roomDistance = startRoom and distMap[startRoom.roomIndex] or 1
+
+		-- Strongly prefer further based on room distance cubed up through 3 rooms away.
+		-- Past that, don't need to force distance as strongly, so just linear.
+		-- 1=1, 2=8, 3=27, 4=40, 5=50, ...
+		local result
+		if roomDistance <= 3 then
+			result = roomDistance^3
+		else
+			result = 10 * roomDistance
+		end
+
+		if log:isFlagged("LOG_MM") then
+			-- If LOG_MM=true is in LOG_FLAGS={...} in main.lua, then calculate and print debug estimates.
+			local tileDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
+			log:write("LOG_MM", "entryGuard candidate (%s,%s) rd=%s res=%s td=%s", x, y, roomDistance, result, tileDist)
+		end
+		return result
 	end
-	return result
+	return moleExitFitness
 end
 
 function mission.pregeneratePrefabs( cxt, tagSet )
@@ -923,7 +935,7 @@ function mission.generatePrefabs( cxt, candidates )
 	cxt.defaultFitnessFn = cxt.defaultFitnessFn or {}
 	cxt.defaultFitnessSelect = cxt.defaultFitnessSelect or {}
 	cxt.maxCountOverride = cxt.maxCountOverride or {}
-	cxt.defaultFitnessFn["entry_guard"] = moleExitFitness
+	cxt.defaultFitnessFn["entry_guard"] = getMoleExitFitnessFn(cxt)
 	cxt.defaultFitnessSelect["entry_guard"] = prefabs.SELECT_WEIGHTED
 	cxt.maxCountOverride["entry_guard"] = 1
 	escape_mission.generatePrefabs( cxt, candidates )
