@@ -12,7 +12,9 @@ local SCRIPTS = include('client/story_scripts')
 local inventory = include( "sim/inventory" )
 local itemdefs = include("sim/unitdefs/itemdefs")
 local escape_mission = include( "sim/missions/escape_mission" )
-local worldgen = include( "sim/worldgen" )--------------------------------------------------------------------------------
+local mazegen = include("sim/mazegen")
+local worldgen = include( "sim/worldgen" )
+--------------------------------------------------------------------------------
 -- Mole Insertion
 --
 -- Escort a mole to the personnel database.
@@ -830,6 +832,12 @@ function mission:init( scriptMgr, sim )
 	escape_mission.init( self, scriptMgr, sim )
 	spawnEliteGuard( sim )
 	sim:addObjective( STRINGS.MOREMISSIONS.MISSIONS.MOLE_INSERTION.FIND_DB, "findDB" )
+	if log:isFlagged("LOG_MM") then
+		local cells = sim:getCells("guard_spawn")
+		local c1 = cells[1] or {}
+		local c4 = cells[4] or {}
+		log:write("LOG_MM", "entryGuard cells [%s,%s]-[%s,%s]", c1.x or "?", c1.y or "?", c4.x or "?", c4.y or "?")
+	end
 
 	sim:getTags().MM_informantMission = true -- for DoFinishMission
 	sim.MM_mole_duration_full = MOLE_BONUS_FULL
@@ -868,12 +876,41 @@ function mission:init( scriptMgr, sim )
 
 end
 
-local function moleFitness( cxt, prefab, x, y )
-	local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
-	-- If no candidate is at least 18 tiles away, pick the furthest.
-	-- Otherwise pick among those at least 18 tiles away
-	-- (using the fractional part of the distance to make it less predictable).
-	return math.min(maxDist, 18 + math.mod(maxDist, 1.0))
+-- Fitness function for the mole's exit (the guard entry).
+-- SELECT_WEIGHTED randomizes an integer among the total candidate weights returned.
+local function moleExitFitness( cxt, prefab, x, y )
+	local adjX, adjY = x + 1, y + 1 -- adjust for the prefab anchor of the guard entry always being -1,-1 outside of it
+	local startRoom = cxt:roomContaining(adjX, adjY)
+	if not startRoom then
+		return 1
+	end
+
+	-- Distance between guard_entry candidate and the objective room. Units: 1 = 1 procgen room
+	local minDepth = nil
+	mazegen.breadthFirstSearch(
+		cxt, startRoom, function(r)
+			if r.tags["moleinsertion"] and minDepth == nil then
+				minDepth = r.depth
+			end
+		end
+	)
+
+	-- Strongly prefer further based on room distance cubed up through 3 rooms away.
+	-- Past that, don't need to force distance as strongly, so just linear.
+	-- 1=1, 2=8, 3=27, 4=40, 5=50, ...
+	local result
+	if minDepth <= 3 then
+		result = minDepth^3
+	else
+		result = 10 * minDepth
+	end
+
+	if log:isFlagged("LOG_MM") then
+		-- If LOG_MM=true is in LOG_FLAGS={...} in main.lua, then calculate and print debug estimates.
+		local maxDist = mission_util.calculatePrefabDistance( cxt, x, y, "personnel_records" )
+		log:write("LOG_MM", "entryGuard candidate (%s,%s) rd=%s res=%s td=%s", x, y, minDepth, result, maxDist)
+	end
+	return result
 end
 
 function mission.pregeneratePrefabs( cxt, tagSet )
@@ -886,8 +923,8 @@ function mission.generatePrefabs( cxt, candidates )
 	cxt.defaultFitnessFn = cxt.defaultFitnessFn or {}
 	cxt.defaultFitnessSelect = cxt.defaultFitnessSelect or {}
 	cxt.maxCountOverride = cxt.maxCountOverride or {}
-	cxt.defaultFitnessFn["entry_guard"] = moleFitness
-	cxt.defaultFitnessSelect["entry_guard"] = prefabs.SELECT_HIGHEST
+	cxt.defaultFitnessFn["entry_guard"] = moleExitFitness
+	cxt.defaultFitnessSelect["entry_guard"] = prefabs.SELECT_WEIGHTED
 	cxt.maxCountOverride["entry_guard"] = 1
 	escape_mission.generatePrefabs( cxt, candidates )
 	prefabs.generatePrefabs( cxt, candidates, "MM_cameradb", 1 ) --force-spawn a camera db, then later despawn any redundant one
