@@ -8,28 +8,33 @@
 
 include makeconfig.mk
 
-.PHONY: build
+.PHONY: build install clean distclean cleanOut
+.SECONDEXPANSION:
 
-build: out/scripts.zip out/gui.kwad out/moremissions_anims.kwad out/sound.kwad out/modinfo.txt
+ensuredir = @mkdir -p $(@D)
 
-install: build
-	mkdir -p $(INSTALL_PATH)
-	rm -f $(INSTALL_PATH)/*.kwad $(INSTALL_PATH)/*.zip
-	cp out/modinfo.txt $(INSTALL_PATH)/
-	cp out/scripts.zip $(INSTALL_PATH)/
-	cp out/gui.kwad $(INSTALL_PATH)/
-	cp out/moremissions_anims.kwad $(INSTALL_PATH)/
-	cp out/sound.kwad $(INSTALL_PATH)/
-	cp pedler_oil.kwad $(INSTALL_PATH)/
+files := modinfo.txt scripts.zip gui.kwad moremissions_anims.kwad sound.kwad oil_fx.kwad
+outfiles := $(addprefix out/, $(files))
+installfiles := $(addprefix $(INSTALL_PATH)/, $(files))
 ifneq ($(INSTALL_PATH2),)
-	mkdir -p $(INSTALL_PATH2)
-	rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
-	cp out/modinfo.txt $(INSTALL_PATH2)/
-	cp out/scripts.zip $(INSTALL_PATH2)/
-	cp pedler_oil.kwad $(INSTALL_PATH2)/
-	cp out/gui.kwad $(INSTALL_PATH2)/
-	cp out/moremissions_anims.kwad $(INSTALL_PATH2)/
-	cp out/sound.kwad $(INSTALL_PATH2)/
+	installfiles += $(addprefix $(INSTALL_PATH2)/, $(files))
+endif
+
+build: $(outfiles)
+install: build $(installfiles)
+
+$(installfiles): %: out/$$(@F)
+	$(ensuredir)
+	cp $< $@
+
+clean: cleanOut
+cleanOut:
+	-rm out/*
+
+distclean:
+	-rm -f $(INSTALL_PATH)/*.kwad $(INSTALL_PATH)/*.zip
+ifneq ($(INSTALL_PATH2),)
+	-rm -f $(INSTALL_PATH2)/*.kwad $(INSTALL_PATH2)/*.zip
 endif
 
 rar: build
@@ -62,6 +67,10 @@ $(anims): %.anim: $(wildcard %.anim.d/*.xml $.anim.d/*.png)
 out/gui.kwad out/moremissions_anims.kwad out/sound.kwad: $(anims) $(guis) $(sounds)
 	mkdir -p out
 	$(KWAD_BUILDER) -i build.lua -o out
+
+out/oil_fx.kwad: oil_fx.kwad
+	$(ensuredir)
+	cp oil_fx.kwad out/oil_fx.kwad
 
 #
 # scripts

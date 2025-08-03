@@ -920,7 +920,7 @@ return {
 			USB_PROGRAM_STORED = "PROGRAM STORED: {1}",
 			
 			REPROGRAMMED = "REPROGRAMMED",
-			REPROGRAMMED_DESC = "This Refit Drone is under Agency control.",
+			REPROGRAMMED_DESC = "This Refit Drone is under Agency control. Uses cover. Is NOT considered friendly by guards.",
 			
 			LEAVES_AT_END = "FRAGILE CASING",
 			LEAVES_AT_END_DESC = "Will be retired to the jet after this mission.",

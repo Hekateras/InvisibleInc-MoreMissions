@@ -47,3 +47,30 @@ if not oldCanUseLockedExit then
 		return oldCanModifyExit( unit, exitOp, cell, dir, ... )
 	end
 end
+
+-- Disallow refit drone from pathing through lethal lasers.
+local oldCanPath = simquery.canPath
+function simquery.canPath( cellquery, unit, startcell, endcell, ... )
+	local result, reason = oldCanPath( cellquery, unit, startcell, endcell, ... )
+	if not result then
+		-- Already failed. No changes needed.
+		return result, reason
+	end
+	if not (unit and unit:getTraits().MM_agencyDynamicNonImpass) then
+		-- Not a special non-vanilla unit.
+		return result, reason
+	end
+	-- agencyDynamicNonImpass: We function like dynamicImpass=false,
+	-- except that enemy impassable emitters (lethal lasers) should still be impassable.
+	for i,cellUnit in ipairs(endcell.units) do
+		if cellUnit:getTraits().dynamicImpass then
+			-- Owned emitters will turn themselves off, so they are not considered impassable.
+			-- Things that aren't emitters are passable.
+			if cellUnit:getTraits().emitterID and not cellUnit:canControl( unit ) then
+				return false, simdefs.CANMOVE_DYNAMIC_IMPASS
+			end
+		end
+	end
+	-- If no impassable emitters, return the original result.
+	return result, reason
+end

@@ -41,7 +41,12 @@ local MM_renameDrone =
 				return false
 			end
 
-            return simquery.canUnitReach(sim, unit, abilityOwner:getLocation())
+			-- Only report true if agent is adjacent, swallowing errors otherwise.
+			-- MM_petDrone can handle the error messages for almost-but-not-quite-reachable.
+			if simquery.canUnitReach(sim, unit, abilityOwner:getLocation()) then
+				return true
+			end
+			return false
 		end,
 
 		executeAbility = function( self, sim, abilityOwner, unit )
