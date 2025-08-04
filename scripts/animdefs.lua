@@ -860,7 +860,7 @@ local animdefs =
 		filterSymbols = {{symbol="glow",filter="default"},{symbol="Highlight",filter="default"},{symbol="red",filter="default"},{symbol="teal",filter="default"}},		
 	},	
 	
-	kanim_printer =
+	kanim_MM_luxury_nanofab =
 	{
 		build = "data/anims/props/MM_luxury_nanofab.abld",
 		anims = { "data/anims/mainframe/mainframe_1x1_3dprinter.adef" },
