@@ -686,6 +686,16 @@ local function startPhase( script, sim )
 	-- sim:getTags().delayPostGame = false
 end
 
+local function hostageFitness(cxt, prefab, x, y)
+    local tileCount = cxt:calculatePrefabLinkage(prefab, x, y)
+    if tileCount == 0 then
+        return 0
+    end
+
+    -- mission_util.calculatePrefabDistance is searching for a string in the filename, so the endless exit is already included
+    local maxDist = mission_util.calculatePrefabDistance(cxt, x, y, "entry", "exit")
+    return tileCount + maxDist ^ 2
+end
 
 ---------------------------------------------------------------------------------------------
 -- Begin!
@@ -722,9 +732,16 @@ function hostage_mission:init( scriptMgr, sim )
 
 end
 
-function hostage_mission.pregeneratePrefabs( cxt, tagSet ) 	-- was tags instead of tagSet
-	escape_mission.pregeneratePrefabs( cxt, tagSet ) 	-- added
-	table.insert( tagSet[1], "hostage" )
+function hostage_mission.pregeneratePrefabs( cxt, tagSet )
+	local prefabs = include("sim/prefabs")
+	escape_mission.pregeneratePrefabs( cxt, tagSet )
+	-- tagSet[1].fitnessSelect = prefabs.SELECT_HIGHEST -- not sure why this is in vanilla, it just maximises tilecount between the default room prefabs
+    table.insert(
+        tagSet, {
+            {"hostage", hostageFitness},
+            fitnessSelect = prefabs.SELECT_HIGHEST
+        }
+    )
 end
 
 function hostage_mission.generatePrefabs( cxt, candidates )
@@ -738,22 +755,6 @@ function hostage_mission.generatePrefabs( cxt, candidates )
             mod.generatePrefabs( cxt, candidates )
         end
     end
-end
-
-
-
-function hostage_mission.finalizeProcgen( cxt )
-	local hostageUnit = cxt:pickUnit( function(u) return u.template == "MM_hostage_capture_ea" end )
-	local startX, startY = cxt:pickCell( cxt.IS_DEPLOY_CELL )
-	local exitX, exitY = cxt:pickCell( cxt.IS_EXIT_CELL )
-	log:write( "FINALIZE: hostage@ <%d, %d>, start<%d, %d>, end<%d, %d>", hostageUnit.x, hostageUnit.y, startX, startY, exitX, exitY )
-	local p0 = cxt:findPath( startX, startY, hostageUnit.x, hostageUnit.y )
-	local p1 = cxt:findPath( hostageUnit.x, hostageUnit.y, exitX, exitY )
-	local rlen = mathutil.dist2d( 0, 0, cxt.board.width, cxt.board.height ) * 2.5
-	local len0 = p0 and p0:getTotalMoveCost() or -1
-	local len1 = p1 and p1:getTotalMoveCost() or -1
-	log:write( "\tPATH TO HOSTAGE ( %d ) + PATH TO EXIT( %d ) == %d >= %d (%.2f)", len0, len1, len0 + len1, rlen, (len0 + len1) / rlen )
-	return (len0 + len1) / rlen
 end
 
 return hostage_mission
