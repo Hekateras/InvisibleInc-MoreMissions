@@ -859,6 +859,17 @@ local animdefs =
 		boundType = BoundType.bound_1x1_med_big,
 		filterSymbols = {{symbol="glow",filter="default"},{symbol="Highlight",filter="default"},{symbol="red",filter="default"},{symbol="teal",filter="default"}},		
 	},	
+	
+	kanim_MM_luxury_nanofab =
+	{
+		build = "data/anims/props/MM_luxury_nanofab.abld",
+		anims = { "data/anims/mainframe/mainframe_1x1_3dprinter.adef" },
+		symbol = "character",		
+		scale = 0.25,
+		layer = Layer.Decor,
+		boundType = BoundType.bound_1x1_tall_big,
+		filterSymbols = {{symbol="glow",filter="default"},{symbol="Highlight",filter="default"},{symbol="teal",filter="default"},{symbol="red",filter="default"}},
+	},	
 }
 
 return animdefs
