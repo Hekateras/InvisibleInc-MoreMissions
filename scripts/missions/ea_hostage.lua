@@ -402,6 +402,7 @@ local function calculateHostageVitalSigns( sim )
 
 	assert(endcell)
 
+	-- last argument is includeTeleports for Facility Flux
 	local pather = astar.AStar:new( astar_handlers.handler:new( sim, nil, nil, nil, true, true ) )
 	local path = pather:findPath( startcell, endcell )
 
