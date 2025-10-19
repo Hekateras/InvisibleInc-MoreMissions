@@ -102,7 +102,7 @@ local PC_HOSTAGE_HIT_END =
 	end,
 }
 
-NPC_END_TURN =
+local NPC_END_TURN =
 {
 	trigger = simdefs.TRG_END_TURN,
 	fn = function( sim, evData )
@@ -114,7 +114,7 @@ NPC_END_TURN =
 	end,
 }
 
-CAPTAIN_SAW_FREE_HOSTAGE =
+local CAPTAIN_SAW_FREE_HOSTAGE =
 {
 	-- Based on mission_util.PC_SAW_UNIT, but for the Captain.
 	trigger = simdefs.TRG_UNIT_APPEARED,
@@ -133,7 +133,7 @@ CAPTAIN_SAW_FREE_HOSTAGE =
 	end,
 }
 
-CAPTAIN_SAW_DISCARDED_MANACLES =
+local CAPTAIN_SAW_DISCARDED_MANACLES =
 {
 	-- Based on mission_util.PC_SAW_UNIT, but for the Captain.
 	trigger = simdefs.TRG_UNIT_APPEARED,
@@ -331,35 +331,51 @@ local function clearStatusAfterEndTurn( script, sim )
 
 end
 
+-- if default exit, get cell just outside of the elevator
+-- if endless exit, get cell on the other side of vault door
+-- so calculateHostageVitalSigns can always find a path,
+-- even when AGP's simquery.canPathBetween override is not present.
+-- (it makes the A* findPath possible to ignore locked doors when a unit isn't passed to it) 
 local function getExit(sim)
-
-	local exitcell = nil
-	local isEndless = isEndlessMode(sim:getParams(), HISEC_EXIT_DAY)
-	if isEndless then
-		local exitroom = nil
-		sim:forEachCell(function(cell)
-			if cell.exitID then
-				exitroom = cell.procgenRoom.roomIndex
-			end
-		end)
-		sim:forEachCell(function(cell)
-			if cell.procgenRoom.roomIndex == exitroom and cell.tags == nil and cell.exitID == nil
-					and cell.tileIndex ~= nil and cell.tileIndex ~= cdefs.TILE_SOLID then
-			   	exitcell = cell
-			end
-		end)
-	else
-		sim:forEachCell(
-			function( c )
-				for i, exit in pairs( c.exits ) do
-					local cell = exit.cell
-					if cell and ((cell.exitID ~= nil and cell.exitID ~= simdefs.EXITID_VENT) or cell.ventID ~= nil) then
-						exitcell = cell
+	for _, room in ipairs(sim._rooms) do
+		if room.tags.exit then
+			for _, rect in ipairs(room.rects) do
+				for y = rect.y0, rect.y1 do
+					for x = rect.x0, rect.x1 do
+						local cell = sim:getCell(x, y)
+						if cell.exitID == simdefs.DEFAULT_EXITID then
+							for dir = 0, 6, 2 do
+								local nCell = cell.exits[dir] and cell.exits[dir].cell
+								if
+									nCell
+									and nCell.exitID ~= simdefs.DEFAULT_EXITID
+									and nCell.tileIndex ~= cdefs.TILE_SOLID
+								then
+									return nCell
+								end
+							end
+						end
 					end
 				end
-			end )
+			end
+		elseif room.tags.exit_vault then
+			for _, rect in ipairs(room.rects) do
+				for y = rect.y0, rect.y1 do
+					for x = rect.x0, rect.x1 do
+						local cell = sim:getCell(x, y)
+						if simquery.cellHasTag(sim, cell, "noguard") then
+							for dir = 0, 6, 2 do
+								local exit = cell.exits[dir]
+								if exit and exit.keybits == simdefs.DOOR_KEYS.SPECIAL_EXIT then
+									return exit.cell
+								end
+							end
+						end
+					end
+				end
+			end
+		end
 	end
-	return exitcell
 end
 
 local function keepExitLocked( script, sim )
@@ -479,7 +495,7 @@ end
 
 
 -- Remove continuous hooks
-function removeHostageHooks( script )
+local function removeHostageHooks( script )
 	script:removeHook( courier_guard_banter )
 	script:removeHook( clearHostageStatusAfterMove )
 	script:removeHook( clearHostageStatusAfterTeleport )
@@ -580,8 +596,6 @@ local function startPhase( script, sim )
 			end
 		end)
 
-	--looks weird, but we need the doors to be open when calculating the vital signs
-	sim:openElevator()
 	sim:triggerEvent( "TRG_OBJ_COMPLETE", { missionType = "EA_hostage" })
 	script:removeHook( keepExitLocked )
 	local vital_signs = calculateHostageVitalSigns(sim)
