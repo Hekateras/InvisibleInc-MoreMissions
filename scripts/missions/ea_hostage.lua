@@ -340,11 +340,11 @@ local function getExit(sim)
 	for _, room in ipairs(sim._rooms) do
 		if room.tags.exit then
 			for _, rect in ipairs(room.rects) do
-				for y = rect.y0, rect.y1 do
-					for x = rect.x0, rect.x1 do
+				for x = rect.x0, rect.x1 do
+					for y = rect.y0, rect.y1 do
 						local cell = sim:getCell(x, y)
 						if cell.exitID == simdefs.DEFAULT_EXITID then
-							for dir = 0, 6, 2 do
+							for _, dir in ipairs(simdefs.DIR_SIDES) do
 								local nCell = cell.exits[dir] and cell.exits[dir].cell
 								if
 									nCell
@@ -360,11 +360,11 @@ local function getExit(sim)
 			end
 		elseif room.tags.exit_vault then
 			for _, rect in ipairs(room.rects) do
-				for y = rect.y0, rect.y1 do
-					for x = rect.x0, rect.x1 do
+				for x = rect.x0, rect.x1 do
+					for y = rect.y0, rect.y1 do
 						local cell = sim:getCell(x, y)
 						if simquery.cellHasTag(sim, cell, "noguard") then
-							for dir = 0, 6, 2 do
+							for _, dir in ipairs(simdefs.DIR_SIDES) do
 								local exit = cell.exits[dir]
 								if exit and exit.keybits == simdefs.DOOR_KEYS.SPECIAL_EXIT then
 									return exit.cell
