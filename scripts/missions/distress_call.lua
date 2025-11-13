@@ -221,7 +221,7 @@ local function KOCaptain(unit)
 	unit:getTraits().heartMonitor = nil
 	local olddispatchEvent = sim.dispatchEvent
 	function sim:dispatchEvent(evType, ...)
-		if evType == simdefs.EV_UNIT_KO then
+		if evType == simdefs.EV_UNIT_KO and olddispatchEvent then
 			self.dispatchEvent = olddispatchEvent
 			olddispatchEvent = nil
 			return
@@ -556,4 +556,5 @@ end
 
 
 return mission
+
 
