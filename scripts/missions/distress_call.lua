@@ -160,7 +160,7 @@ local function make_gear( sim, newUnit, agentTemplate )
 		table.insert(new_items, template_list[sim:nextRand(1,#template_list)])
 	end
 
-	items_output = {}
+	local items_output = {}
 	
 	if newUnit:getTraits().MM_captureTime then
 		for k, item in pairs(captured_items) do
@@ -199,8 +199,7 @@ local function makeGuardInvestigate( script, sim )
 			local agent = mission_util.findUnitByTag( sim, "escapedAgent" )
 			if agent and guard and guard:getBrain() then
 				guard:getBrain():getSenses():addInterest(cell.x, cell.y, simdefs.SENSE_RADIO, simdefs.REASON_HUNTING, agent)
-				-- sim:processReactions()
-				sim:setClimax(true)
+				sim:processReactions()
 			end
 		end
 end
@@ -215,6 +214,25 @@ local function getLostAgent( agency )
     end
 
     return lostAgent
+end
+
+local function KOCaptain(unit)
+	local sim = unit:getSim()
+	unit:getTraits().heartMonitor = nil
+	local olddispatchEvent = sim.dispatchEvent
+	function sim:dispatchEvent(evType, ...)
+		if evType == simdefs.EV_UNIT_KO then
+			self.dispatchEvent = olddispatchEvent
+			olddispatchEvent = nil
+			return
+		end
+		olddispatchEvent(self, evType, ...)
+	end
+	unit:setKO(sim, 3)
+	if olddispatchEvent then
+		sim.dispatchEvent = olddispatchEvent
+	end
+	unit:getTraits().heartMonitor = "enabled"
 end
 
 local function startAgentEscape( script, sim, mission )
@@ -315,9 +333,7 @@ local function startAgentEscape( script, sim, mission )
 		newGuard:setPlayerOwner( sim:getNPC() )
 		newGuard:setPather(sim:getNPC().pather)
 		sim:warpUnit( newGuard, unit_cell )
-		newGuard:getTraits().heartMonitor = nil
-		newGuard:setKO( sim, 3 )
-		newGuard:getTraits().heartMonitor = "enabled"
+		KOCaptain(newGuard)
 		local item_passcard = simfactory.createUnit( unitdefs.lookupTemplate( "passcard" ), sim )  --this is less effort than fiddling with spyface to make sure the door to that room can never be locked...
 		sim:spawnUnit( item_passcard )
 		newGuard:addChild( item_passcard )
@@ -379,6 +395,8 @@ local function startAgentEscape( script, sim, mission )
 		if (sim:getParams().difficultyOptions.MM_difficulty == nil ) or sim:getParams().difficultyOptions.MM_difficulty and (sim:getParams().difficultyOptions.MM_difficulty == "hard") then
 			makeGuardInvestigate(script, sim)
 		end
+
+		sim:setClimax(true)
 		
 		local scripts = SCRIPTS.INGAME.DISTRESS_CALL.SAW_AGENT
 		if not newOperative:getUnitData().agentID then
@@ -538,3 +556,4 @@ end
 
 
 return mission
+
