@@ -115,7 +115,25 @@ local function init( modApi )
 	for i,log in ipairs(logs) do
 		modApi:addLog(log)
 	end
-	
+
+	local EAA = mod_manager:findModByName("Extra Agent Abilities")
+	if EAA then
+		local oldlateLoad = EAA.modfn.lateLoad
+		if oldlateLoad then
+			function EAA.modfn.lateLoad(...)
+				oldlateLoad(...)
+				local propdefs = include("sim/unitdefs/propdefs")
+				for _, propName in ipairs({ "MM_mole_cloak", "MM_mole_disguise" }) do
+					local prop = propdefs[propName]
+					if prop and prop.abilities then
+						for _, ability in ipairs({ "selectItemToss", "selectItemDeploy", "itemThrow" }) do
+							array.removeElement(prop.abilities, ability)
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
 local function lateInit( modApi )
