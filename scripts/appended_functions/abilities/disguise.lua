@@ -10,7 +10,11 @@ function disguise:canUseAbility(sim, unit, ...)
 		and unit:getTraits().cooldown
 		and unit:getTraits().cooldown > 0
 	then
-		return false, util.sformat(STRINGS.UI.REASON.COOLDOWN, unit:getTraits().cooldown)
+		local user = unit:getUnitOwner()
+		if user and not user:getTraits().disguiseOn then
+			return false, util.sformat(STRINGS.UI.REASON.COOLDOWN, unit:getTraits().cooldown)
+		end
 	end
 	return oldcanuseAbility(self, sim, unit, ...)
 end
+
