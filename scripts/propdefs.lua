@@ -297,7 +297,7 @@ local prop_templates =
 		--profile_icon = "gui/items/icon-cloak.png",
 		profile_icon = "gui/icons/item_icons/items_icon_small/icon-item_invisicloak_small.png",			
 		profile_icon_100 = "gui/icons/item_icons/icon-item_invisi_cloak.png",
-		traits = { cantdrop = true, pickupOnly="INFORMANT", disposable = false, duration = 1,cooldown = 0, cooldownMax = 6,  cloakDistanceMax=5, cloakInVision = true, restrictedUse={{agentID="MM_mole",name=STRINGS.MOREMISSIONS.AGENTS.MOLE.NAME}}},
+		traits = { cantdrop = true, pickupOnly="Informant", disposable = false, duration = 1,cooldown = 0, cooldownMax = 6,  cloakDistanceMax=5, cloakInVision = true, restrictedUse={{agentID="MM_mole",name=STRINGS.MOREMISSIONS.AGENTS.MOLE.NAME}}},
 		abilities = { "carryable","recharge","useInvisiCloak" },
 		value = 1,
 		floorWeight = 1,
@@ -315,7 +315,7 @@ local prop_templates =
     	profile_icon_100 = "gui/icons/item_icons/icon-item_holomesh_Prism.png",		
     	abilities = { "carryable" , "disguise" },
     	value = 500,
-    	traits = {  cantdrop = true, pickupOnly="INFORMANT", scan_vulnerable=true, cooldown = 0, cooldownMax = 5, disguise_duration = 1, restrictedUse={{agentID="MM_mole",name=STRINGS.MOREMISSIONS.AGENTS.MOLE.NAME}}, drop_dropdisguise=true },	
+    	traits = {  cantdrop = true, pickupOnly="Informant", scan_vulnerable=true, cooldown = 0, cooldownMax = 5, disguise_duration = 1, restrictedUse={{agentID="MM_mole",name=STRINGS.MOREMISSIONS.AGENTS.MOLE.NAME}}, drop_dropdisguise=true },	
 	},
 	
 	-- AI TERMINAL
