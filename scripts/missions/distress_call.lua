@@ -389,8 +389,14 @@ local function startAgentEscape( script, sim, mission )
 
 		end
 		
-		script:clearQueue(true)
-		script:queue({ type = "showInterface" }) -- in case we cleared it from the queue by accident
+		-- we'll show the mission objectives later
+		local _, i = array.findIf(script.script.eventQueue, function(v)
+			return v.type == "showMissionObjectives"
+		end)
+		if i then
+			table.remove(script.script.eventQueue, i)
+		end
+		
 		sim:dispatchEvent(simdefs.EV_PLAY_SOUND, "SpySociety/Actions/hostage/free_hostage")
 
 		if (sim:getParams().difficultyOptions.MM_difficulty == nil ) or sim:getParams().difficultyOptions.MM_difficulty and (sim:getParams().difficultyOptions.MM_difficulty == "hard") then
@@ -562,6 +568,7 @@ end
 
 
 return mission
+
 
 
 
