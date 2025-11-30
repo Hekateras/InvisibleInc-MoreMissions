@@ -131,18 +131,14 @@ function Actions.mmMoveToSafetyPoint:executePath(unit, ...)
 end
 
 function Actions.mmMoveToSafetyPoint:onTerminate()
-	-- executePath can return BSTATE_COMPLETE when the coop handler returns a path with no movement.
-	-- validate the result before we let the VIP reach for the gun.
+	-- validate the result
 	if self.status == simdefs.BSTATE_COMPLETE and not self.unit:getTraits().mmSearchedVipSafe then
 		self.status = simdefs.BSTATE_FAILED
 		local goal = self.unit:getTraits().mmVipSafePoint
 		if goal then
 			local x1, y1 = self.unit:getLocation()
 			local x2, y2 = goal.x, goal.y
-			if
-				simquery.canReach(self.sim, x1, y1, x2, y2)
-				and self.unit:getFacing() == goal.facing
-			then
+			if x1 == x2 and y1 == y2 and self.unit:getFacing() == goal.facing then
 				self.status = simdefs.BSTATE_COMPLETE
 			end
 		end
