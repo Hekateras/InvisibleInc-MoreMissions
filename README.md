@@ -10,7 +10,7 @@ The aim of this mod is to add new kinds of missions to the game. Check the [Wiki
 If you're looking to playtest the mod, see the [Wiki/Installation](https://github.com/Mobbstar/InvisibleInc-MoreMissions/wiki/1.-Installation).
 **You can download the .rar file containing the most recent full build of the mod** from the Releases tab on the right, and unzip it into your Mods folder. This version is largely up to date but may not include recent minor updates.
 
-This mod requires [Sim Constructor by Cyberboy2000](https://steamcommunity.com/workshop/filedetails/?id=580661011) and [Function Library by wodzu_93](https://steamcommunity.com/sharedfiles/filedetails/?id=1745350836).
+This mod requires [Sim Constructor by Cyberboy2000](https://steamcommunity.com/workshop/filedetails/?id=580661011), [Function Library by wodzu_93](https://steamcommunity.com/sharedfiles/filedetails/?id=1745350836) and [Community Bug Fixes by qoala_](https://steamcommunity.com/sharedfiles/filedetails/?id=2151835746).
 
 ![image](https://user-images.githubusercontent.com/39839566/117757618-b3319200-b220-11eb-8001-c416c9df1233.png)
 

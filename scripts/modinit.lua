@@ -99,6 +99,7 @@ local function init( modApi )
 	include( scriptPath .. "/btree/conditions" )
 	include( scriptPath .. "/btree/bountytargetbrain" )
 	include( scriptPath .. "/btree/bountyfakebrain" )
+	include(scriptPath .. "/appended_functions/abilities/disguise")
 
 	include( scriptPath.."/hud/hud" )--from Interactive Events, required for modal dialog choice menu to work properly
 
@@ -114,7 +115,6 @@ local function init( modApi )
 	for i,log in ipairs(logs) do
 		modApi:addLog(log)
 	end
-	
 end
 
 local function lateInit( modApi )
