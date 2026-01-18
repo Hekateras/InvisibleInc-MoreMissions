@@ -1,14 +1,54 @@
 local util = include( "modules/util" )
-local simdefs = include( "sim/simdefs" )
 local array = include( "modules/array" )
-local cdefs = include( "client_defs" )
-local simdefs = include( "sim/simdefs" )
 
---for unloading
-local default_missiontags
+local default_missiontags --for unloading
+
+local strictRequirements = {"Sim Constructor", "Function Library", "Community Bug Fixes"}
+local popupShown = false
+local function dependenciesInstalled()
+	if popupShown then
+		return false
+	elseif #strictRequirements == 0 then
+		return true
+	end
+
+	for _, modData in ipairs(mod_manager.mods) do
+		if modData.installed then
+			array.removeElement(strictRequirements, modData.name)
+		end
+	end
+	if #strictRequirements == 0 then
+		return true
+	end
+
+	popupShown = true
+	local nameList = table.concat(strictRequirements, ", ")
+	local modal_dialog = include("states/state-modal-dialog")
+	MOAICoroutine.new():run(function()
+		repeat
+			coroutine.yield()
+		until #statemgr.getStates() > 0
+
+		modal_dialog.show(
+			string.format("More Missions requires these currently missing mods:\n%s\n\nPlease install them and restart the game.", nameList),
+			"Mod dependencies for More Missions"
+		)
+	end)
+	if not array.find(strictRequirements, "Sim Constructor") then
+		-- sim constructor just unloads instead of crashing on error
+		error(string.format("[More Missions] missing dependency: %s", nameList))
+	end
+	return false
+end
+
 
 local function earlyInit( modApi )
-	modApi.requirements = { "Contingency Plan", "Sim Constructor", "Function Library", "Advanced Guard Protocol", "Items Evacuation", "New Items And Augments","Advanced Cyberwarfare","Programs Extended","Offbrand Programs","Switch Content Mod", "Interactive Events","Generation Options+", "Additional Banter", "Controller Bindings" }
+	if not dependenciesInstalled() then
+		return
+	end
+
+	-- "requirements" as in "if installed, has to load first"
+	modApi.requirements = {"Contingency Plan", "Sim Constructor", "Function Library", "Advanced Guard Protocol", "Items Evacuation", "New Items And Augments","Advanced Cyberwarfare","Programs Extended","Offbrand Programs","Switch Content Mod", "Interactive Events","Generation Options+", "Additional Banter", "Controller Bindings" }
 
 	local scriptPath = modApi:getScriptPath()
 	rawset(_G,"SCRIPT_PATHS",rawget(_G,"SCRIPT_PATHS") or {})
@@ -21,6 +61,10 @@ local function earlyInit( modApi )
 end
 
 local function init( modApi )
+	if not dependenciesInstalled() then
+		return
+	end
+
 	-- Path for custom prefabs
 	local scriptPath = modApi:getScriptPath()
 	local dataPath = modApi:getDataPath()
@@ -42,11 +86,7 @@ local function init( modApi )
 	modApi:addGenerationOption("server_farm",  STRINGS.MOREMISSIONS.OPTIONS.SERVER_FARM , STRINGS.MOREMISSIONS.OPTIONS.SERVER_FARM_TIP, {noUpdate=true} )
 	modApi:addGenerationOption("vault",  STRINGS.MOREMISSIONS.OPTIONS.VAULT , STRINGS.MOREMISSIONS.OPTIONS.VAULT_TIP, {noUpdate=true} )
 
-	--I really wish there were some kind of splitter right about now -M
-	--Shirsh set those that not works to "false" until they'll be ready to not bug test playthroughs
-	-- modApi:addGenerationOption("holostudio",  STRINGS.MOREMISSIONS.OPTIONS.HOLOSTUDIO , STRINGS.MOREMISSIONS.OPTIONS.HOLOSTUDIO_TIP, {noUpdate=true, enabled = false} )
 	modApi:addGenerationOption("assassination",  STRINGS.MOREMISSIONS.OPTIONS.ASSASSINATION , STRINGS.MOREMISSIONS.OPTIONS.ASSASSINATION_TIP, {noUpdate=true} )
-	-- modApi:addGenerationOption("landfill",  STRINGS.MOREMISSIONS.OPTIONS.LANDFILL , STRINGS.MOREMISSIONS.OPTIONS.LANDFILL_TIP, {noUpdate=true, enabled = false} )
 	modApi:addGenerationOption("ea_hostage",  STRINGS.MOREMISSIONS.OPTIONS.EA_HOSTAGE , STRINGS.MOREMISSIONS.OPTIONS.EA_HOSTAGE_TIP, {noUpdate=true} )
 	modApi:addGenerationOption("distress_call",  STRINGS.MOREMISSIONS.OPTIONS.DISTRESSCALL, STRINGS.MOREMISSIONS.OPTIONS.DISTRESSCALL_TIP, {noUpdate=true} )
 	modApi:addGenerationOption("weapons_expo",  STRINGS.MOREMISSIONS.OPTIONS.WEAPONSEXPO, STRINGS.MOREMISSIONS.OPTIONS.WEAPONSEXPO_TIP, {noUpdate=true} )
@@ -63,15 +103,11 @@ local function init( modApi )
 	modApi:addGenerationOption("MM_newday", STRINGS.MOREMISSIONS.OPTIONS.NEWDAY, STRINGS.MOREMISSIONS.OPTIONS.NEWDAY_DESC,
 	{
 		values = {0,1,2,3,4,5,6,7,8,9,10},
-		value=4,
+		value = 4,
 		noUpdate = true,
 	})
-	
-	modApi:addGenerationOption("MM_exec_terminals", STRINGS.MOREMISSIONS.OPTIONS.EXEC_TERMINALS, STRINGS.MOREMISSIONS.OPTIONS.EXEC_TERMINALS_DESC,
-	{ noUpdate = true,})	
-
+	modApi:addGenerationOption("MM_exec_terminals", STRINGS.MOREMISSIONS.OPTIONS.EXEC_TERMINALS, STRINGS.MOREMISSIONS.OPTIONS.EXEC_TERMINALS_DESC, { noUpdate = true,})	
 	modApi:addGenerationOption("MM_spawnTable_droids" , STRINGS.MOREMISSIONS.OPTIONS.SPAWNTABLE_DROIDS, STRINGS.MOREMISSIONS.OPTIONS.SPAWNTABLE_DROIDS_DESC, {values = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 99999}, value=5, strings = STRINGS.MOREMISSIONS.OPTIONS.SPAWNTABLE_DROIDS_VALUES, noUpdate = true} )		
-	
 	modApi:addGenerationOption("MM_hard_mode",  STRINGS.MOREMISSIONS.OPTIONS.HARD_MODE , STRINGS.MOREMISSIONS.OPTIONS.HARD_MODE_TIP, {enabled = false, noUpdate=true } )
 
 	-- patch automatic tracker
@@ -178,6 +214,7 @@ end
 local function unloadCommon( modApi, options )
 	local scriptPath = modApi:getScriptPath()
 
+	local simdefs = include( "sim/simdefs" )
 	local serverdefs = include( "modules/serverdefs" )
 	local serverdefs_mod = include( scriptPath .. "/serverdefs" )
 	removeAllElementsAndDupes(serverdefs.ESCAPE_MISSION_TAGS, serverdefs_mod.ESCAPE_MISSION_TAGS)
@@ -203,10 +240,14 @@ local function earlyLoad( modApi, options, params )
 end
 
 local function load( modApi, options, params )
+	if not dependenciesInstalled() then
+		return
+	end
+
 	--before doing anything, clean up
 	unloadCommon( modApi, options )
 	
-	local serverdefs = include( "modules/serverdefs" )
+	local simdefs = include( "sim/simdefs" )
 	local scriptPath = modApi:getScriptPath()
 
 	if params then
@@ -516,6 +557,10 @@ local function lateLoad( modApi, options, params, mod_options )
 end
 
 local function unload( modApi, options )
+	if not dependenciesInstalled() then
+		return
+	end
+
 	unloadCommon( modApi, options )
 end
 
