@@ -686,7 +686,38 @@ local inserts_ai_term = {
                     },				
 			},
 		},
-	},	
+	},
+	{
+		"upgrade_screen.lua",
+		{ "skins", "program", "children" },
+		{
+			name = [[MM_aiTermUpgradedTip]],
+			isVisible = false,
+			noInput = false,
+			anchor = 1,
+			rotation = 0,
+			x = 133,
+			xpx = true,
+			y = -35,
+			ypx = true,
+			w = 340,
+			wpx = true,
+			h = 45,
+			hpx = true,
+			sx = 1,
+			sy = 1,
+			ctor = [[label]],
+			halign = MOAITextBox.LEFT_JUSTIFY,
+			valign = MOAITextBox.LEFT_JUSTIFY,
+			text_style = [[font1_14_r]],
+			color = {
+				0,
+				1,
+				0,
+				1,
+			},
+		},
+	},
 }
 
 return 
@@ -694,3 +725,4 @@ return
 inserts_exec = inserts_exec,
 inserts_ai_term = inserts_ai_term
 }
+
