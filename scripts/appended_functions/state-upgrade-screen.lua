@@ -21,39 +21,26 @@ local function findUpgradedProgramWidget(progList, programUpgrades, ability)
 	end
 end
 
+local function formatNumber(num)
+	if num >= 0 then
+		num = "+" .. num
+	end
+	return num
+end
+
 local function getUpgradeDesc(ability, upgrade, isRapier)
 	local desc = ""
 	local path = STRINGS.MOREMISSIONS.UI.TOOLTIPS.PROGRAM_UPGRADE
 	if upgrade.parasite_strength then
-		local num = upgrade.parasite_strength
-		if num > 0 then
-			num = "+" .. num
-		end
-		desc = util.sformat(path.PARASITE, num)
+		desc = util.sformat(path.PARASITE, formatNumber(upgrade.parasite_strength))
 	elseif upgrade.break_firewalls then
-		local num = upgrade.break_firewalls
-		if num > 0 then
-			num = "+" .. num
-		end
-		desc = util.sformat(path.FIREWALLS, num)
+		desc = util.sformat(path.FIREWALLS, formatNumber(upgrade.break_firewalls))
 	elseif upgrade.cpu_cost then
-		local num = upgrade.cpu_cost
-		if num > 0 then
-			num = "+" .. num
-		end
-		desc = util.sformat(path.PWRCOST, num)
+		desc = util.sformat(path.PWRCOST, formatNumber(upgrade.cpu_cost))
 	elseif upgrade.maxCooldown then
-		local num = upgrade.maxCooldown
-		if num > 0 then
-			num = "+" .. num
-		end
-		desc = util.sformat(path.COOLDOWN, num)
+		desc = util.sformat(path.COOLDOWN, formatNumber(upgrade.maxCooldown))
 	elseif upgrade.range then
-		local num = upgrade.range
-		if num > 0 then
-			num = "+" .. num
-		end
-		desc = util.sformat(path.RANGE, num)
+		desc = util.sformat(path.RANGE, formatNumber(upgrade.range))
 	end
 
 	-- special tooltip for rapier
@@ -99,3 +86,4 @@ function upgradeScreen:selectIncognita(unitDef, ...)
 		end
 	end
 end
+
