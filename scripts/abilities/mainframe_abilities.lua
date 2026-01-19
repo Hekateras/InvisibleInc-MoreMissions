@@ -63,7 +63,7 @@ for i, program in pairs(mainframe_abilities) do
 					end
 					self.MM_upgraded = true
 					self.value = self.value * 1.3
-					self.name = "UPGRADED ".. self.name
+					self.name = STRINGS.MOREMISSIONS.UI.TOOLTIPS.PROGRAM_UPGRADE.UPGRADED_PREFIX .. self.name
 				end
 			end
 		end
@@ -147,3 +147,4 @@ end
 end
 
 return programModifier
+
