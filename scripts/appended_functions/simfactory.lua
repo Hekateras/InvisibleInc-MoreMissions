@@ -3,8 +3,8 @@ local simfactory = include("sim/simfactory")
 local oldcreateUnit = simfactory.createUnit
 function simfactory.createUnit(unitData, ...)
 	local unit = oldcreateUnit(unitData, ...)
-	local traits = unit:getTraits()
-	if traits then
+	if unit and unit.getTraits then
+		local traits = unit:getTraits()
 		if traits.MM_mod_cooldownMax and traits.cooldownMax then
 			traits.cooldownMax = traits.cooldownMax + traits.MM_mod_cooldownMax
 		end
