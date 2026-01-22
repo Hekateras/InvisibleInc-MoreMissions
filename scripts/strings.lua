@@ -901,6 +901,9 @@ return {
 				COOLDOWN = "{1} cooldown",
 				RANGE = "{1} range",
 				PWRCOST_Rapier = "{1} PWR cost. Rapier will retain a PWR cost of 1 for an additional alarm level.", --special case for -1 PWR cost on Rapier
+
+				UPGRADED_PREFIX = "UPGRADED ",
+				UPGRADED_LONG_PREFIX = "AI TERMINAL UPGRADE: ",
 			},
 
 			HOSTILE_AI_WEAKEN = "AI TERMINAL SABOTAGE",

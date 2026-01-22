@@ -118,7 +118,7 @@ local function init( modApi )
 
 	-- SIDE MISSIONS
 	include( scriptPath .. "/appended_functions/shop_panel" ) --used for customizing Luxury Nanofab
-	include( scriptPath .. "/appended_functions/unitdefs" ) --make item upgrades persist
+	include( scriptPath .. "/appended_functions/simfactory" ) --make item upgrades persist
 	include( scriptPath.."/items_panel" )--used to make the workshop stashable
 
 	-- MOLE INSERTION
@@ -143,6 +143,7 @@ local function init( modApi )
 	local modifyPrograms = include( scriptPath .. "/abilities/mainframe_abilities" )
 	modifyPrograms()
 	-- double-included here in init and in lateLoad to catch both vanilla overrides and mod additions. Upgraded programs with abilityOverride such as Fusion DO NOT WORK without this line!
+	include(scriptPath.. "/appended_functions/state-upgrade-screen")
 	
 	util.tmerge( STRINGS.LOADING_TIPS, STRINGS.MOREMISSIONS.LOADING_TIPS  ) --add new loading screen tooltips
 	
@@ -290,6 +291,10 @@ local function load( modApi, options, params )
 
 	if generationOptionEnabled(options, "ai_terminal") then
 		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ).inserts_ai_term )
+	end
+
+	if generationOptionEnabled(options, "mole_insertion") then
+		modApi:insertUIElements(include(scriptPath .. "/screen_inserts").inserts_informant)
 	end
 
 	if options.MM_newday then --cribbed from GenOpts+
@@ -540,6 +545,7 @@ local function lateLoad( modApi, options, params, mod_options )
 				if not params.traits then
 					params.traits = {}
 				end
+				params.traits.MM_mod_damage = unit:getTraits().MM_mod_damage
 				params.traits.MM_mod_cooldownMax = unit:getTraits().MM_mod_cooldownMax
 				params.traits.MM_mod_chargesMax = unit:getTraits().MM_mod_chargesMax
 				params.traits.MM_mod_maxAmmo = unit:getTraits().MM_mod_maxAmmo
