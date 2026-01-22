@@ -293,6 +293,10 @@ local function load( modApi, options, params )
 		modApi:insertUIElements( include( scriptPath.."/screen_inserts" ).inserts_ai_term )
 	end
 
+	if generationOptionEnabled(options, "mole_insertion") then
+		modApi:insertUIElements(include(scriptPath .. "/screen_inserts").inserts_informant)
+	end
+
 	if options.MM_newday then --cribbed from GenOpts+
 		rawset(simdefs,"NUM_MISSIONS_TO_SPAWN",options.MM_newday.value)
 	else
