@@ -73,11 +73,8 @@ function upgradeScreen:selectIncognita(unitDef, ...)
 				STRINGS.MOREMISSIONS.UI.TOOLTIPS.PROGRAM_UPGRADE.UPGRADED_LONG_PREFIX .. desc
 			)
 			if ability.cpu_cost and upgrade.cpu_cost then
-				if upgrade.cpu_cost < 0 then
-					widget.binder.powerTxt:setColor(0, 1, 0, 1)
-				end
 				local newCpuCost = ability.cpu_cost + upgrade.cpu_cost
-				if newCpuCost >= 1 then
+				if newCpuCost ~= 0 then
 					widget.binder.powerTxt:setText(newCpuCost)
 				else
 					widget.binder.powerTxt:setText("-")
@@ -86,4 +83,5 @@ function upgradeScreen:selectIncognita(unitDef, ...)
 		end
 	end
 end
+
 
