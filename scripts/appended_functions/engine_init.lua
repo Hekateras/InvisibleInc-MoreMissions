@@ -1,6 +1,8 @@
 local simdefs = include( "sim/simdefs" )
 local simengine = include( "sim/engine" )
 local simquery = include( "sim/simquery" )
+local util = include("client_util")
+local mission_util = include("sim/missions/mission_util")
 
 -----
 -- Allow guards with npcPassiveKeyBits to use matching locked doors
@@ -61,6 +63,9 @@ end
 local simengine = include("sim/engine")
 local oldInit = simengine.init
 
+local spawn_refit_drone = include(SCRIPT_PATHS.more_missions .. "/spawn_refit_drone")
+local spawn_mole_bonus = include(SCRIPT_PATHS.more_missions .. "/spawn_mole_bonus")
+
 function simengine.init( self, params, levelData, ... )
 	self._levelOutput = levelData:parseBoard( params.seed, params )
 	if params.situationName == "assassination" then
@@ -71,6 +76,13 @@ function simengine.init( self, params, levelData, ... )
 		end
 	end
 	oldInit( self, params, levelData, ... )
+	if params.world ~= "omni" and params.world ~= "omni2" then
+		self:getLevelScript():addHook("MM_POST_UI_INITIALIZED", function(script, sim)
+			script:waitFor(util.extend(mission_util.UI_INITIALIZED)({ priority = -10 }))
+			spawn_refit_drone(script, sim)
+			spawn_mole_bonus(sim)
+		end)
+	end
 end
 
 local sim_canPlayerSeeUnit_old = simengine.canPlayerSeeUnit
