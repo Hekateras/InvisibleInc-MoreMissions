@@ -166,10 +166,8 @@ local function lateInit( modApi )
 	local mod_mission_scoring = include( scriptPath .. "/appended_functions/mission_scoring")
 	mod_mission_scoring.runAppend( modApi ) --other part in load
 
-	-- start of mission: spawn intel bonuses if player has completed a mole mission
 	--needs to run after FuncLib inits
 	local mission_util_lateInit = include( scriptPath .. "/appended_functions/mission_util_lateInit")
-	-- Similar edit is done in Load to mid_1!
 	mission_util_lateInit.runAppend( modApi )
 	
 	-- includes simunit as well as simdrone appends
@@ -493,12 +491,6 @@ local function load( modApi, options, params )
 	include( scriptPath .. "/appended_functions/abilities/overwatchMelee" ) --unused
 	local melee_append = include( scriptPath .. "/appended_functions/abilities/melee" ) --used for Assassination
 	melee_append.runAppend( modApi )
-
-	--------
-	-- MOLE INSERTION
-	reinclude = include --necessary for tweaking mid_1
-	local mid_1_append = include( scriptPath .. "/missions/mid_1" )
-	mid_1_append.runAppend(  modApi )
 	
 	--Add the clusters to serverdefs
 	serverdefs.CLUSTERS = serverdefs_mod.CLUSTERS
