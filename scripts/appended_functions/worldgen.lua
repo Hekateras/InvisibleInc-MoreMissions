@@ -10,8 +10,6 @@ local simdefs = include( "sim/simdefs" )
 local rand_module = include( "modules/rand" )
 
 
-local function runAppend()
-
 local worldgen = include("sim/worldgen")
 local generateThreats_old = worldgen.generateThreats
 
@@ -62,6 +60,8 @@ worldgen.generateThreats = function( cxt, spawnTable, spawnList, ... )
     end
 end
 
+upvalueUtil.findAndReplace(worldgen.worlds.ftm.generateUnits, "generateThreats", worldgen.generateThreats)
+
 ------ OLD
 -- local generateThreats_old = worldgen.generateThreats
 -- worldgen.generateThreats = function( cxt, spawnTable, spawnList, ... )
@@ -100,6 +100,3 @@ end
 	-- return generateThreats_old( cxt, spawnTable, spawnList, ... )
 -- end	
 
-end
-
-return { runAppend = runAppend }
