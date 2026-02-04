@@ -640,8 +640,13 @@ local SAW_WORKSHOP = mission_util.PC_SAW_UNIT_WITH_TRAIT("MM_modifyItem")
 local function startWorkshopMission( script, sim )
 	local event, a, b = script:waitFor(USED_CONSOLE, SAW_WORKSHOP) -- either one starts the mission
 	if event == USED_CONSOLE then
-		--local agent, console = a.sourceUnit, a.unit
-		script:queue({ script = SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_CONSOLE, type = "newOperatorMessage" }) --blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the console instead of adding it to incognita
+		-- local agent, console = a.sourceUnit, a.unit
+		-- need to add min 0.3 seconds delay so the first message doesn't immediately cancel after TA console hijack bark finishes
+		-- (pretty sure this is only necessary for scripts that aren't voiced)
+		script:queue(0.3 * cdefs.SECONDS)
+		-- blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the
+		-- console instead of adding it to incognita
+		script:queue({ script = SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_CONSOLE, type = "newOperatorMessage" })
 	elseif event == SAW_WORKSHOP then
 		--local seenUnit, seer = a, b
 		-- we already show a script in our seeWorkshop hook
