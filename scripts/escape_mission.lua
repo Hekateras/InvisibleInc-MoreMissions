@@ -642,7 +642,7 @@ local function startWorkshopMission( script, sim )
 	if event == USED_CONSOLE then
 		-- local agent, console = a.sourceUnit, a.unit
 		-- need to add min 0.3 seconds delay so the first message doesn't immediately cancel after TA console hijack bark finishes
-		-- (pretty sure this is only necessary for scripts that aren't voiced)
+		-- (caused by 0.3 deactivate_left transition time in skins.lua)
 		script:queue(0.3 * cdefs.SECONDS)
 		-- blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the
 		-- console instead of adding it to incognita
