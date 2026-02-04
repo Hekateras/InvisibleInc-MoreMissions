@@ -182,8 +182,7 @@ local function lateInit( modApi )
 	include( scriptPath .. "/appended_functions/abilities/observePath")
 	
 	include( scriptPath .. "/appended_functions/engine_lateInit")
-	local worldgen_append = include( scriptPath .. "/appended_functions/worldgen")
-	worldgen_append.runAppend()
+	include( scriptPath .. "/appended_functions/worldgen") -- needs to run after AGP
 	
 	include( scriptPath .. "/appended_functions/state-map-screen") --for Informant map screen UI
 	include( scriptPath .. "/appended_functions/state-postgame") -- for Texpo easter egg
