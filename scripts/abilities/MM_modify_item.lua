@@ -89,6 +89,7 @@ local MM_modify_item =
 			not itemUnit:getUnitData().value
 			or itemUnit:getTraits().is_modified
 			or itemUnit:getTraits().unupgradeable
+			or itemUnit:getTraits().cantdrop
 		then
 			-- not modifiable, return empty table
 			return upgrade_option
