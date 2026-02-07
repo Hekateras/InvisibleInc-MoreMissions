@@ -83,122 +83,148 @@ local MM_modify_item =
 		return true
 	end,
 
-	executeAbility = function ( self, sim, unit, userUnit)
+	getUpgradeOptions = function(self, sim, itemUnit)
+		local upgrade_option = {}
+		if
+			not itemUnit:getUnitData().value
+			or itemUnit:getTraits().is_modified
+			or itemUnit:getTraits().unupgradeable
+		then
+			-- not modifiable, return empty table
+			return upgrade_option
+		end
+
+		if itemUnit:getTraits().cooldownMax and itemUnit:getTraits().cooldownMax > 1 then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.COOLDOWN)
+		end
+		if itemUnit:getTraits().chargesMax then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.CHARGE)
+		end
+		if itemUnit:getTraits().maxAmmo then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.AMMO)
+		end
+		if itemUnit:getTraits().pwrCost then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.POWER)
+		end
+		if itemUnit:getRequirements() then
+			for _, _ in pairs(itemUnit:getRequirements()) do
+				table.insert(upgrade_option, UPGRADE_OPTIONS.SKILL_REQ)
+				break
+			end
+		end
+		if
+			itemUnit:getTraits().armorPiercing
+			or (
+				(itemUnit:getTraits().melee or itemUnit:getTraits().slot == "gun")
+				and not itemUnit:getTraits().ignoreArmor
+			)
+		then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.ARMOR_PIERCE)
+		end
+		if
+			(itemUnit:getTraits().damage and itemUnit:getTraits().damage > 0)
+			or (itemUnit:getTraits().baseDamage and itemUnit:getTraits().baseDamage > 0)
+		then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.DAMAGE)
+		end
+		if itemUnit:getTraits().usesLeft and itemUnit:getTraits().usesLeft > 0 then
+			table.insert(upgrade_option, UPGRADE_OPTIONS.USES)
+		end
+		return upgrade_option
+	end,
+
+	getModifyPowerCost = function(self, sim, item)
+		local itemValue = item:getUnitData().value
+		return itemValue and math.floor(itemValue / 100)
+	end,
+
+	executeAbility = function(self, sim, unit, userUnit)
 		local itemUnit = unit:getChildren()[1]
-		if itemUnit then
-			local upgrade_option = {}
-			table.insert(upgrade_option, UPGRADE_OPTIONS.CANCEL)
-			local dialog_txt = util.sformat( STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_TXT, itemUnit:getName() )
-			
-			local itemValue = itemUnit:getUnitData().value
-			if not itemValue or itemUnit:getTraits().is_modified then
-				--item not modifiable
-				dialog_txt = dialog_txt .. STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_UNMODABLE
-			elseif math.floor(itemValue / 100) > (sim.MM_workshop_pwr or 0) then
-				--not enough power
-				dialog_txt = dialog_txt .. util.sformat( STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_PWR, math.floor(itemValue / 100) )
-			else
-				if itemUnit:getTraits().cooldownMax and itemUnit:getTraits().cooldownMax > 1 then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.COOLDOWN)
-				end
-				if itemUnit:getTraits().chargesMax then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.CHARGE)
-				end
-				if itemUnit:getTraits().maxAmmo then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.AMMO)
-				end
-				if itemUnit:getTraits().pwrCost then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.POWER)
-				end
-				if itemUnit:getRequirements() then
-					for _, _ in pairs( itemUnit:getRequirements() ) do
-						table.insert(upgrade_option, UPGRADE_OPTIONS.SKILL_REQ)
-						break
-					end
-				end
-				if itemUnit:getTraits().armorPiercing or (itemUnit:getTraits().damage and itemUnit:getTraits().damage > 0) or (itemUnit:getTraits().baseDamage and itemUnit:getTraits().baseDamage > 0) then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.ARMOR_PIERCE)
-				end
-				if (itemUnit:getTraits().damage and itemUnit:getTraits().damage > 0) or (itemUnit:getTraits().baseDamage and itemUnit:getTraits().baseDamage > 0) then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.DAMAGE)
-				end
-				if itemUnit:getTraits().usesLeft and itemUnit:getTraits().usesLeft > 0 then
-					table.insert(upgrade_option, UPGRADE_OPTIONS.USES)
-				end
+		if not itemUnit then
+			return
+		end
+
+		local dialog_txt = util.sformat(STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_TXT, itemUnit:getName())
+		local upgrade_option = self:getUpgradeOptions(sim, itemUnit)
+		local pwrCost = self:getModifyPowerCost(sim, itemUnit)
+		if #upgrade_option == 0 then
+			dialog_txt = dialog_txt .. STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_UNMODABLE
+		elseif not pwrCost or pwrCost > (sim.MM_workshop_pwr or 0) then
+			upgrade_option = {}
+			dialog_txt = dialog_txt .. util.sformat(STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_PWR, pwrCost)
+		end
+		
+		table.insert(upgrade_option, 1, UPGRADE_OPTIONS.CANCEL)
+		local option = showDialog(sim, STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_TITLE, dialog_txt, upgrade_option)
+		local modification_done = false
+		if upgrade_option[option] == UPGRADE_OPTIONS.CANCEL then
+			--do nothing
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.COOLDOWN then
+			itemUnit:getTraits().MM_mod_cooldownMax = (itemUnit:getTraits().maa_mod_cooldownMax or 0) - 1
+			itemUnit:getTraits().cooldownMax = itemUnit:getTraits().cooldownMax - 1
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.COOLDOWN
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.CHARGE then
+			itemUnit:getTraits().MM_mod_chargesMax = (itemUnit:getTraits().maa_mod_chargesMax or 0) + 1
+			itemUnit:getTraits().chargesMax = itemUnit:getTraits().chargesMax + 1
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.CHARGE
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.AMMO then
+			itemUnit:getTraits().MM_mod_maxAmmo = (itemUnit:getTraits().maa_mod_maxAmmo or 0) + 1
+			itemUnit:getTraits().maxAmmo = itemUnit:getTraits().maxAmmo + 1
+			itemUnit:getTraits().ammo = (itemUnit:getTraits().ammo or 0) + 1
+			if itemUnit:getTraits().ammo_clip then
+				itemUnit:getTraits().ammo_clip = (itemUnit:getTraits().ammo_clip or 0) + 1
 			end
-			
-			if #upgrade_option > 0 then
-				local option = showDialog( sim, STRINGS.MOREMISSIONS.ABILITIES.MOD_ITEM_DIALOG_TITLE, dialog_txt, upgrade_option )
-				local modification_done = false
-				if upgrade_option[option] == UPGRADE_OPTIONS.CANCEL then
-					--do nothing
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.COOLDOWN then
-					itemUnit:getTraits().MM_mod_cooldownMax = (itemUnit:getTraits().maa_mod_cooldownMax or 0) - 1
-					itemUnit:getTraits().cooldownMax = itemUnit:getTraits().cooldownMax - 1
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.COOLDOWN
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.CHARGE then
-					itemUnit:getTraits().MM_mod_chargesMax = (itemUnit:getTraits().maa_mod_chargesMax or 0) + 1
-					itemUnit:getTraits().chargesMax = itemUnit:getTraits().chargesMax + 1
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.CHARGE
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.AMMO then
-					itemUnit:getTraits().MM_mod_maxAmmo = (itemUnit:getTraits().maa_mod_maxAmmo or 0) + 1
-					itemUnit:getTraits().maxAmmo = itemUnit:getTraits().maxAmmo + 1
-					itemUnit:getTraits().ammo = (itemUnit:getTraits().ammo or 0) + 1
-					if itemUnit:getTraits().ammo_clip then
-						itemUnit:getTraits().ammo_clip = (itemUnit:getTraits().ammo_clip or 0) + 1
-					end					
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.AMMO
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.POWER then
-					itemUnit:getTraits().MM_mod_pwrCost = (itemUnit:getTraits().maa_mod_pwrCost or 0) - 1
-					itemUnit:getTraits().pwrCost = itemUnit:getTraits().pwrCost - 1
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.POWER
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.SKILL_REQ then
-					itemUnit:getTraits().MM_mod_requirements = true
-					itemUnit._unitData.requirements = nil
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.SKILL_REQ
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.ARMOR_PIERCE then
-					itemUnit:getTraits().MM_mod_armorPiercing = (itemUnit:getTraits().maa_mod_armorPiercing or 0) + 1
-					itemUnit:getTraits().armorPiercing = (itemUnit:getTraits().armorPiercing or 0) + 1
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.ARMOR_PIERCE
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.DAMAGE then
-					itemUnit:getTraits().MM_mod_damage = (itemUnit:getTraits().maa_mod_damage or 0) + 1
-					if itemUnit:getTraits().damage and itemUnit:getTraits().stun then
-						itemUnit:getTraits().stun = itemUnit:getTraits().stun + 1
-					end
-					if itemUnit:getTraits().damage then
-						itemUnit:getTraits().damage = itemUnit:getTraits().damage + 1
-					end
-					if itemUnit:getTraits().baseDamage then
-						itemUnit:getTraits().baseDamage = itemUnit:getTraits().baseDamage + 1
-					end
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.DAMAGE
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				elseif upgrade_option[option] == UPGRADE_OPTIONS.USES then
-					local item_template = unitdefs.lookupTemplate( itemUnit:getUnitData().id )
-					itemUnit:getTraits().usesLeft = (itemUnit:getTraits().usesLeft or 0) + ( (item_template.traits and item_template.traits.usesLeft) or 3)
-					itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.USES
-					itemUnit:getTraits().is_modified = true
-					modification_done = true
-				end
-				
-				if modification_done then
-					unit:getTraits().used = true
-					sim:triggerEvent( "MM_workshop_used", {unit=unit, userUnit=userUnit} )
-				end
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.AMMO
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.POWER then
+			itemUnit:getTraits().MM_mod_pwrCost = (itemUnit:getTraits().maa_mod_pwrCost or 0) - 1
+			itemUnit:getTraits().pwrCost = itemUnit:getTraits().pwrCost - 1
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.POWER
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.SKILL_REQ then
+			itemUnit:getTraits().MM_mod_requirements = true
+			itemUnit._unitData.requirements = nil
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.SKILL_REQ
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.ARMOR_PIERCE then
+			itemUnit:getTraits().MM_mod_armorPiercing = (itemUnit:getTraits().maa_mod_armorPiercing or 0) + 1
+			itemUnit:getTraits().armorPiercing = (itemUnit:getTraits().armorPiercing or 0) + 1
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.ARMOR_PIERCE
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.DAMAGE then
+			itemUnit:getTraits().MM_mod_damage = (itemUnit:getTraits().maa_mod_damage or 0) + 1
+			if itemUnit:getTraits().damage and itemUnit:getTraits().stun then
+				itemUnit:getTraits().stun = itemUnit:getTraits().stun + 1
 			end
+			if itemUnit:getTraits().damage then
+				itemUnit:getTraits().damage = itemUnit:getTraits().damage + 1
+			end
+			if itemUnit:getTraits().baseDamage then
+				itemUnit:getTraits().baseDamage = itemUnit:getTraits().baseDamage + 1
+			end
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.DAMAGE
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		elseif upgrade_option[option] == UPGRADE_OPTIONS.USES then
+			local item_template = unitdefs.lookupTemplate(itemUnit:getUnitData().id)
+			itemUnit:getTraits().usesLeft = (itemUnit:getTraits().usesLeft or 0)
+				+ ((item_template.traits and item_template.traits.usesLeft) or 3)
+			itemUnit:getTraits().MM_modded_item_trait = UPGRADE_OPTIONS.USES
+			itemUnit:getTraits().is_modified = true
+			modification_done = true
+		end
+
+		if modification_done then
+			unit:getTraits().used = true
+			sim:triggerEvent("MM_workshop_used", { unit = unit, userUnit = userUnit })
 		end
 	end,
 }
