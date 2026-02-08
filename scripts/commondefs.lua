@@ -64,6 +64,20 @@ local function onItemTooltip(tooltip, unit)
 	if unit and unit:getTraits().MM_modded_item_trait then
 		tooltip:addAbility( STRINGS.MOREMISSIONS.UI.TOOLTIPS.ITEM_MODDED, util.sformat( STRINGS.MOREMISSIONS.UI.TOOLTIPS.ITEM_MODDED_DESC, unit:getTraits().MM_modded_item_trait ), "gui/icons/skills_icons/skills_icon_small/icon-item_technician_small.png" )
 	end
+	local sim = unit:getSim()
+	if sim and sim.MM_workshop_pwr and not sim.MM_workshop_complete then
+		local ability = abilitydefs.lookupAbility("MM_modify_item")
+		if ability and #ability:getUpgradeOptions(sim, unit) > 0 then
+			tooltip:addAbility(
+				STRINGS.MOREMISSIONS.UI.TOOLTIPS.ITEM_CAN_BE_MODDED,
+				util.sformat(
+					STRINGS.MOREMISSIONS.UI.TOOLTIPS.ITEM_CAN_BE_MODDED_DESC,
+					ability:getModifyPowerCost(sim, unit)
+				),
+				"gui/icons/skills_icons/skills_icon_small/icon-item_technician_small.png"
+			)
+		end
+	end
 end
 
 local function onAgentTooltip(tooltip, unit)
@@ -176,3 +190,4 @@ return
 	onGuardTooltip = onGuardTooltip,
 	onItemWorldTooltip = onItemWorldTooltip,
 }
+

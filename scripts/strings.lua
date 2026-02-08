@@ -958,6 +958,9 @@ return {
 			
 			ITEM_MODDED = "Modified",
 			ITEM_MODDED_DESC = "This item has been modified: {1}",
+
+			ITEM_CAN_BE_MODDED = "CAN BE MODIFIED AT WORKSHOP",
+			ITEM_CAN_BE_MODDED_DESC = "Cost: {1} PWR",
 		},
 		
 		REFIT_DRONE_NAMES = {
