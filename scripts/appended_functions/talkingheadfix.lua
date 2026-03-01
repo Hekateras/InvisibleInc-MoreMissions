@@ -57,6 +57,8 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 	-- why was this faster with no voice? makes no sense to me
 	lbl:spoolText(line.text, 30) -- line.voice and 30 or 60)
 	self._typeThread = MOAICoroutine.new()
+	-- changed so it automatically turns the page after finishing the spool if the
+	-- text is too long to display in a single text box
 	self._typeThread:run(function()
 		while true do
 			lbl._cont:getProp():spool()
@@ -83,6 +85,7 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 				rig_util.wait(0.2 * cdefs.SECONDS)
 			else
 				-- wait for typethread to terminate instead of a fixed amount of time
+				-- (setting line.timing no longer does anything)
 				while self._typeThread ~= nil do
 					coroutine.yield()
 				end
@@ -100,6 +103,7 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 				rig_util.wait(0.2 * cdefs.SECONDS)
 			else
 				-- wait for typethread to terminate instead of a fixed amount of time
+				-- (setting line.timing no longer does anything)
 				while self._typeThread ~= nil do
 					coroutine.yield()
 				end
@@ -146,3 +150,4 @@ function talkinghead_ingame:ShowLine(idx)
     oldShowLine(self, idx)
 
 end ]]--
+
