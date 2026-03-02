@@ -61,10 +61,14 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 	-- text is too long to display in a single text box
 	self._typeThread:run(function()
 		while true do
+			if not playing_voice then
+				MOAIFmodDesigner.playSound("SpySociety/HUD/menu/text_print_2_LP", "MM_talkinghead_type")
+			end
 			lbl._cont:getProp():spool()
 			while lbl:isSpooling() do
 				coroutine.yield()
 			end
+			MOAIFmodDesigner.stopSound("MM_talkinghead_type")
 			rig_util.wait(2.5 * cdefs.SECONDS)
 			if lbl:hasNextPage() then
 				lbl:nextPage()
@@ -118,6 +122,12 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 	end
 end
 
+local StopLine = talkinghead_ingame.StopLine
+talkinghead_ingame.StopLine = function(self, ...)
+	MOAIFmodDesigner.stopSound("MM_talkinghead_type")
+	StopLine(self, ...)
+end
+
 --[[ -- prevent Operator messages during mainframe mode, if we want this
 
 --by Cyberboy2000
@@ -150,4 +160,5 @@ function talkinghead_ingame:ShowLine(idx)
     oldShowLine(self, idx)
 
 end ]]--
+
 
