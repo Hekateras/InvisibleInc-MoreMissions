@@ -5,9 +5,9 @@ local talkinghead_ingame = include( "client/fe/talkinghead_ingame" )
 local ShowLine = talkinghead_ingame.ShowLine
 talkinghead_ingame.ShowLine = function(self, idx, ...)
 	-- bug fix for all scripts: wait for the previous script to fade out so
-	-- the new one doesn't disappear immediately
-	while self.widget:hasTransition() do
-		coroutine.yield()
+	-- the new one doesn't disappear immediately (this only seems to happen after TA oneliners?)
+	if self.widget:hasTransition() then
+		self.widget:clearTransition()
 	end
 
 	-- leave other scripts unchanged
@@ -178,6 +178,7 @@ function talkinghead_ingame:ShowLine(idx)
     oldShowLine(self, idx)
 
 end ]]--
+
 
 
 
