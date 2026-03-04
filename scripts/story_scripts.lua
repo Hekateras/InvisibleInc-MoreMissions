@@ -2,28 +2,34 @@
 local util = include( "modules/util" )
 
 local MakeLine = {
-	Central = function(t, text, voice)
+	Central = function(t, text, voice, pageDelay, spoolSpeed)
 		t.text = text
-        t.anim = "portraits/central_face"
-        t.name = STRINGS.UI.CENTRAL_TITLE
-        t.voice = voice
-        t.delay = 0.25
-		t.MM_script = true
-	end,
-	Monster = function(t, text, voice)
-		t.text = text
-        t.anim = "portraits/monst3r_face"
-        t.name = STRINGS.UI.MONST3R_TITLE
+		t.anim = "portraits/central_face"
+		t.name = STRINGS.UI.CENTRAL_TITLE
 		t.voice = voice
 		t.delay = 0.25
+		t.pageDelay = pageDelay -- table with page as key and delay in seconds as value
+		t.spoolSpeed = spoolSpeed -- 30 is default
 		t.MM_script = true
 	end,
-	Incognita = function(t, text, voice)
+	Monster = function(t, text, voice, pageDelay, spoolSpeed)
+		t.text = text
+		t.anim = "portraits/monst3r_face"
+		t.name = STRINGS.UI.MONST3R_TITLE
+		t.voice = voice
+		t.delay = 0.25
+		t.pageDelay = pageDelay
+		t.spoolSpeed = spoolSpeed
+		t.MM_script = true
+	end,
+	Incognita = function(t, text, voice, pageDelay, spoolSpeed)
 		t.text = text
 		t.anim = "portraits/incognita_face"
 		t.name = STRINGS.UI.INCOGNITA_TITLE
 		t.voice = voice
 		t.delay = 0.25
+		t.pageDelay = pageDelay
+		t.spoolSpeed = spoolSpeed
 		t.MM_script = true
 	end,
 }
@@ -35,7 +41,7 @@ local function GenerateScript(strings, scripts)
 			log:write("[MM] Warning: The following Story Script had no valid actor (" .. util.stringize(strings[3], 1) .. "):\n" .. strings[1])
 			strings[3] = "Central"
 		end
-		MakeLine[strings[3]](scripts, strings[1], strings[2])
+		MakeLine[strings[3]](scripts, strings[1], strings[2], strings[4], strings[5])
 	else
 		for i, data in pairs(strings) do
 			if type(data) == "table" then
