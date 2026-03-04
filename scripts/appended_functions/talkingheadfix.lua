@@ -4,6 +4,13 @@ local talkinghead_ingame = include( "client/fe/talkinghead_ingame" )
 
 local ShowLine = talkinghead_ingame.ShowLine
 talkinghead_ingame.ShowLine = function(self, idx, ...)
+	-- bug fix for all scripts: wait for the previous script to fade out so
+	-- the new one doesn't disappear immediately
+	while self.widget:hasTransition() do
+		coroutine.yield()
+	end
+
+	-- leave other scripts unchanged
 	if not self.script[idx].MM_script then
 		return ShowLine(self, idx, ...)
 	end
@@ -54,24 +61,35 @@ talkinghead_ingame.ShowLine = function(self, idx, ...)
 
 	-- new code starts here
 	local lbl = self.widget.binder.bodyTxt
-	-- why was this faster with no voice? makes no sense to me
-	lbl:spoolText(line.text, 30) -- line.voice and 30 or 60)
+	lbl:spoolText(line.text, line.spoolSpeed or 30) -- added optional spoolspeed
 	self._typeThread = MOAICoroutine.new()
 	-- changed so it automatically turns the page after finishing the spool if the
 	-- text is too long to display in a single text box
 	self._typeThread:run(function()
+		local page = 1
 		while true do
+			local frames = 0
 			if not playing_voice then
 				MOAIFmodDesigner.playSound("SpySociety/HUD/menu/text_print_2_LP", "MM_talkinghead_type")
 			end
 			lbl._cont:getProp():spool()
 			while lbl:isSpooling() do
+				frames = frames + 1
 				coroutine.yield()
 			end
 			MOAIFmodDesigner.stopSound("MM_talkinghead_type")
-			rig_util.wait(2.5 * cdefs.SECONDS)
+			-- optional delay before turning the page
+			if line.pageDelay and line.pageDelay[page] then
+				local delay = line.pageDelay[page] * cdefs.SECONDS - frames
+				if delay > 0 then
+					rig_util.wait(delay)
+				end
+			else
+				rig_util.wait(2.5 * cdefs.SECONDS)
+			end
 			if lbl:hasNextPage() then
 				lbl:nextPage()
+				page = page + 1
 			else
 				break
 			end
@@ -160,5 +178,6 @@ function talkinghead_ingame:ShowLine(idx)
     oldShowLine(self, idx)
 
 end ]]--
+
 
 
