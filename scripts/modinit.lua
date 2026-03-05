@@ -58,6 +58,8 @@ local function earlyInit( modApi )
 
 	local serverdefs = include( "modules/serverdefs" )
 	default_missiontags = array.copy(serverdefs.ESCAPE_MISSION_TAGS)
+
+	include( scriptPath .. "/appended_functions/talkingheadfix") -- semi-override
 end
 
 local function init( modApi )
@@ -157,8 +159,6 @@ end
 local function lateInit( modApi )
 	local dataPath = modApi:getDataPath()
 	local scriptPath = modApi:getScriptPath()
-	
-	-- include( scriptPath .. "/appended_functions/talkingheadfix") -- prevent Operator messages during mainframe mode, if we want this
 	
 	-- MOLE_INSERTION
 	-- custom intelligence benefit
