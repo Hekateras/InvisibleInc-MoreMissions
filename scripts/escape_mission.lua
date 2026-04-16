@@ -641,9 +641,6 @@ local function startWorkshopMission( script, sim )
 	local event, a, b = script:waitFor(USED_CONSOLE, SAW_WORKSHOP) -- either one starts the mission
 	if event == USED_CONSOLE then
 		-- local agent, console = a.sourceUnit, a.unit
-		-- need to add min 0.3 seconds delay so the first message doesn't immediately cancel after TA console hijack bark finishes
-		-- (caused by 0.3 deactivate_left transition time in skins.lua)
-		script:queue(0.3 * cdefs.SECONDS)
 		-- blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the
 		-- console instead of adding it to incognita
 		script:queue({ script = SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_CONSOLE, type = "newOperatorMessage" })
