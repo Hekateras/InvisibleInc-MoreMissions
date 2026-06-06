@@ -390,12 +390,9 @@ local function startAgentEscape( script, sim, mission )
 		end
 		
 		-- we'll show the mission objectives later
-		local _, i = array.findIf(script.script.eventQueue, function(v)
-			return v.type == "showMissionObjectives"
+		array.removeIf(script.script.eventQueue, function(v)
+			return type(v) == "table" and v.type == "showMissionObjectives"
 		end)
-		if i then
-			table.remove(script.script.eventQueue, i)
-		end
 		
 		sim:dispatchEvent(simdefs.EV_PLAY_SOUND, "SpySociety/Actions/hostage/free_hostage")
 
@@ -568,6 +565,7 @@ end
 
 
 return mission
+
 
 
 
