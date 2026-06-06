@@ -634,16 +634,21 @@ local ITEM_MODDED =
 		return true
 	end,
 }
-local AGENT_CONNECTION =
-{
-	trigger = "agentConnectionDone", --custom 'hook' in makeAgentConnection append in modinit
-	fn = function( sim, evData )
-		return true
-	end,
-}
+local USED_CONSOLE = mission_util.PC_HIJACKED()
+local SAW_WORKSHOP = mission_util.PC_SAW_UNIT_WITH_TRAIT("MM_modifyItem")
 
 local function startWorkshopMission( script, sim )
-	script:queue( { script=SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_CONSOLE, type="newOperatorMessage" } ) --blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the console instead of adding it to incognita
+	local event, a, b = script:waitFor(USED_CONSOLE, SAW_WORKSHOP) -- either one starts the mission
+	if event == USED_CONSOLE then
+		-- local agent, console = a.sourceUnit, a.unit
+		-- blurb Make the sidemission known to the player and tell them, that they can reroute power to the workshop from the
+		-- console instead of adding it to incognita
+		script:queue({ script = SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_CONSOLE, type = "newOperatorMessage" })
+	elseif event == SAW_WORKSHOP then
+		--local seenUnit, seer = a, b
+		-- we already show a script in our seeWorkshop hook
+	end
+	
 	sim.MM_workshop_pwr = 0
 	sim:addObjective( util.sformat( STRINGS.MOREMISSIONS.MISSIONS.SIDEMISSIONS.WORKSHOP.OBJECTIVE_1, sim.MM_workshop_pwr ), "reroute_workshop_pwr" )
 	sim:addObjective( STRINGS.MOREMISSIONS.MISSIONS.SIDEMISSIONS.WORKSHOP.OBJECTIVE_2, "use_workshop" )
@@ -655,18 +660,10 @@ local function startWorkshopMission( script, sim )
 	end
 end
 
-local function preSeeConsole( script, sim )
-	script:waitFor( AGENT_CONNECTION )
-	startWorkshopMission( script, sim )
-end
-
-local function seeConsole( script, sim )
-	script:waitFor( mission_util.PC_SAW_UNIT_WITH_TRAIT( "mainframe_console" ))
-	startWorkshopMission( script, sim )
-end
-
 local function seeWorkshop( script, sim )
-	script:waitFor( mission_util.PC_SAW_UNIT_WITH_TRAIT( "MM_modifyItem" ))
+	local _, workshop = script:waitFor(SAW_WORKSHOP)
+	local x, y = workshop:getLocation()
+	script:queue({ type = "pan", x = x, y = y })
 	script:queue( { script=SCRIPTS.INGAME.MM_SIDEMISSIONS.WORKSHOP.SEE_WORKSHOP, type="newOperatorMessage" } )
 end
 
@@ -683,7 +680,7 @@ end
 
 local function workshopUsed( script, sim )
 	script:waitFor( ITEM_MODDED )
-	script:removeHook( seeConsole )
+	script:removeHook( startWorkshopMission )
 	script:removeHook( seeWorkshop )
 	script:removeHook( addWorkshopPwr )
 	sim:removeObjective( "reroute_workshop_pwr" )
@@ -694,7 +691,7 @@ end
 
 -----------------------------------------------------------------
 
-function fixNoPatrolFacing( sim )
+local function fixNoPatrolFacing( sim )
 	for i,unit in pairs( sim:getAllUnits() ) do
 		if unit:getTraits().mm_fixnopatrolfacing and unit:getTraits().nopatrol then
 			unit:getTraits().patrolPath[1].facing = unit:getFacing()
@@ -702,7 +699,7 @@ function fixNoPatrolFacing( sim )
 	end
 end
 
-function pregeneratePrefabs( cxt, tagSet )
+local function pregeneratePrefabs( cxt, tagSet )
 	--cxt.params.side_mission = "MM_workshop"
 	--table.insert(tagSet, {"drone_lab"}) -- for dlc1 side missions
 	if cxt.params.side_mission then
@@ -718,7 +715,7 @@ function pregeneratePrefabs( cxt, tagSet )
 	end
 end
 
-function init( scriptMgr, sim )
+local function init( scriptMgr, sim )
 	fixNoPatrolFacing( sim )
 	--sidemission stuff
 	local params = sim:getParams()
@@ -744,25 +741,7 @@ function init( scriptMgr, sim )
 			scriptMgr:addHook( "KillBoss", KillBoss )
 			scriptMgr:addHook( "escapeBoss", escapeBoss )
 		elseif params.side_mission == "MM_workshop" then
-			--just make consoles sightable??
-			for _, simunit in pairs( sim:getAllUnits() ) do
-				if simunit:getTraits().mainframe_console then
-					simunit:getTraits().sightable = true
-				end
-			end
-			--do we already see a console?
-			local console_seen = false
-			for _, seenUnit in ipairs( sim:getPC():getSeenUnits() ) do
-				if seenUnit:getTraits().mainframe_console then
-					console_seen = true
-					break
-				end
-			end
-			if console_seen then
-				scriptMgr:addHook( "preSeeConsole", preSeeConsole )
-			else
-				scriptMgr:addHook( "seeConsole", seeConsole )
-			end
+			scriptMgr:addHook( "startWorkshopMission", startWorkshopMission)
 			scriptMgr:addHook( "seeWorkshop", seeWorkshop )
 			scriptMgr:addHook( "workshopUsed", workshopUsed )
 			scriptMgr:addHook( "addWorkshopPwr", addWorkshopPwr )
