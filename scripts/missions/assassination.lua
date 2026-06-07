@@ -1000,7 +1000,6 @@ local function spawnDecoy( sim, cell, facing )
 	sim:warpUnit( decoyUnit, cell )	
 	decoyUnit:setPather(sim:getNPC().pather)
 	decoyUnit:getBrain():setSituation(sim:getNPC():getIdleSituation() )
-	sim:getNPC():getIdleSituation():generatePatrolPath( decoyUnit, decoyUnit:getLocation() )
 	decoyUnit:getTraits().patrolPath = { { x = cell.x, y = cell.y, facing = facing } }
 	decoyUnit:getTraits().MM_decoy = true
 	decoyUnit:getTraits().MM_unsearchable = true
