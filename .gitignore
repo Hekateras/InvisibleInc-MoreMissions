@@ -3,13 +3,13 @@
 
 # Invisible, Inc. specific
 int/*
-anim.kwad
-gui.kwad
+# anim.kwad
+# gui.kwad
 # sound.kwad
 scripts.zip
 
 # Automated build output
-anims/**/*.anim
+# anims/**/*.anim
 out/
 # Automated build local configs
 batconfig.bat
