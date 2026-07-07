@@ -211,7 +211,6 @@ local function spottedStorage( script, sim )
 			script:addHook( spottedStorage )
 			script:queue( { type="hideHUDInstruction" } )
 		end
-		script:addHook( spottedStorage )
 	elseif sim:getPC():getTraits().W93_spottedStorage == 2 then
 		script:waitFor( PC_SAW_UNIT_WITH_MARKER2( script, "w93_storage_1", STRINGS.MOREMISSIONS.MISSIONS.SIDEMISSIONS.STEAL_STORAGE.TEXT1 ))
 		if not safeUnit:getTraits().W93_safe_spotted then
